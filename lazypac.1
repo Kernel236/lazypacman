@@ -91,8 +91,6 @@ Like
 .B remove
 but also deletes configuration files left behind by the package(s) in
 .IR /etc .
-Use this when you want a completely clean uninstall and have no interest
-in keeping your old settings.
 Runs:
 .B $AUR_HELPER -Rns
 .I pkg ...
@@ -288,7 +286,6 @@ For each package listed, print
 or
 .I "pkg: not installed"
 on its own line.
-Each package is checked independently, so mixed results are reported correctly.
 Runs:
 .B $AUR_HELPER -Q
 .I pkg
@@ -338,7 +335,6 @@ lazypac deps -r python
 .B orphans
 List packages that were installed as dependencies but are no longer
 required by any other installed package.
-These are safe candidates for removal.
 Runs:
 .B $AUR_HELPER -Qdt
 .IP
@@ -360,13 +356,9 @@ lazypac orphans > ~/orphans.txt
 
 After a system upgrade, pacman may leave behind
 .I .pacnew
-files (new default configs the package ships with, not applied to avoid
-overwriting your customisations) or
+files (new default configs, not applied to avoid overwriting your changes) or
 .I .pacsave
-files (backups of your configs that would have been overwritten).
-Ignoring these over time leads to missed security fixes and misconfigured
-services.
-These two commands help you find and resolve them promptly.
+files (backups of configs it would have overwritten).
 
 .TP
 .B pacnew
@@ -584,40 +576,8 @@ package whose version changed (old version \(-> new version) or that was
 newly installed.
 
 .SH LICENSE
-.B lazypac
-is released under the
-.B MIT License.
-.PP
-MIT was chosen deliberately for a tool of this nature:
-.PP
-.B It imposes no conditions on the user.
-Anyone can use, copy, modify, fork, or embed this script in any project
-\(em personal, commercial, or proprietary \(em without asking permission
-and without having to open-source their own work.
-This matters for a system administration tool that people often adapt and
-include in their own dotfiles, deployment scripts, or internal tooling.
-.PP
-.B It is compatible with everything.
-MIT is compatible with GPL, LGPL, Apache 2.0, and virtually every other
-license.
-A GPLv3 tool (like
-.BR yay )
-can ship alongside MIT code without license conflicts.
-A BSD-licensed init system can bundle a copy of this script.
-.PP
-.B It matches the scope of the project.
-.B lazypac
-wraps tools it does not own or redistribute.
-There is no complex IP to protect and no need for the reciprocal sharing
-requirements of copyleft licenses like GPL.
-The MIT License is the lightest correct choice for a wrapper script whose
-entire value is convenience, not a novel algorithm or library.
-.PP
-.B It is recognised and trusted worldwide.
-Developers, legal teams, and package managers (including the AUR) treat
-MIT as a known quantity.
-Using it removes friction for anyone who wants to contribute, redistribute,
-or audit the project's licensing status.
+MIT. See the LICENSE file in the source distribution or
+/usr/share/licenses/lazypac/LICENSE after installation.
 
 .SH EXIT STATUS
 .TP
