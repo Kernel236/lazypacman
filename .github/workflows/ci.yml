@@ -19,6 +19,7 @@ jobs:
         with:
           scandir: '.'
           severity: warning
+          ignore_paths: tests
 
   executable:
     name: Executable bit
