@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner_lazypacman.png" alt="Lazy Pacman" width="900">
+  <img src="assets/banner_lazypacman.png" alt="Lazy Pacman" width="700">
 </p>
 
 A dead-simple bash wrapper for common `pacman`/`yay`/`paru` commands. No databases, no tracking, no hidden logic, just readable aliases. You always know exactly what's running underneath.
