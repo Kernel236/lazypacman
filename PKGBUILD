@@ -1,6 +1,6 @@
 # Maintainer: Kernel236 <riccardo-del-signore@hotmail.it>
 pkgname=lazypac
-pkgver=1.0.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="Simple lazy human-readable wrapper for pacman/yay/paru"
 arch=('any')
