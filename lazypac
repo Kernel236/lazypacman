@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 
 # Detection order: yay > paru > pacman
 if command -v yay &>/dev/null; then
@@ -51,6 +51,9 @@ case "$cmd" in
         pkg_write -Rns "${@:2}"
         ;;
     update)
+        echo "WARNING: syncing repos without upgrading (-Sy) can leave your system in a partial upgrade state."
+        echo "         This is unsafe on Arch. Use 'lazypac upgrade' to sync and upgrade together."
+        echo ""
         pkg_write -Sy
         ;;
     upgrade)
@@ -68,7 +71,7 @@ case "$cmd" in
         "$PKG" -Q > "$before_snap"
 
         echo "==> Running upgrade..."
-        pkg_write -Syu "${@:2}"
+        pkg_write -Syu "${@:2}" || { echo "==> Upgrade failed. No log written."; exit 1; }
 
         echo ""
         echo "==> Snapshotting new state..."
@@ -78,7 +81,7 @@ case "$cmd" in
         {
             echo "Lazy Pacman — upgrade log"
             echo "Date: $(date)"
-            echo "Package manager: $PKG"
+            echo "AUR helper: $PKG"
             echo ""
             changed=0
             while IFS=' ' read -r p new_ver; do
@@ -124,13 +127,16 @@ case "$cmd" in
         ;;
     check)
         [[ -z "${2:-}" ]] && { echo "Usage: lazypac check <package...>"; exit 1; }
+        _check_failed=0
         for pkgname in "${@:2}"; do
             if "$PKG" -Q "$pkgname" &>/dev/null; then
                 echo "$pkgname: installed"
             else
                 echo "$pkgname: not installed"
+                _check_failed=1
             fi
         done
+        exit "$_check_failed"
         ;;
     deps)
         [[ -z "${2:-}" ]] && { echo "Usage: lazypac deps <package>"; exit 1; }
@@ -172,6 +178,7 @@ case "$cmd" in
                 ls -lh "$LOG_DIR"
             fi
         else
+            [[ "$2" == */* ]] && { echo "Invalid log name."; exit 1; }
             log_path="${LOG_DIR}/${2}"
             if [[ ! -f "$log_path" ]]; then
                 echo "Log file not found: ${2}"
