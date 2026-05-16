@@ -2,6 +2,12 @@
   <img src="assets/banner_lazypacman.png" alt="Lazy Pacman" width="900">
 </p>
 
+<p align="center">
+  <a href="https://github.com/Kernel236/lazypacman/actions/workflows/ci.yml"><img src="https://github.com/Kernel236/lazypacman/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://aur.archlinux.org/packages/lazypac"><img src="https://img.shields.io/aur/version/lazypac" alt="AUR version"></a>
+  <img src="https://img.shields.io/badge/made%20with-%E2%9D%A4-red" alt="Made with love">
+</p>
+
 A dead-simple bash wrapper for common `pacman`/`yay`/`paru` commands. No databases, no tracking, no hidden logic, just readable aliases. You always know exactly what's running underneath.
 
 Automatically detects your AUR helper (`yay` preferred, then `paru`) at startup.
