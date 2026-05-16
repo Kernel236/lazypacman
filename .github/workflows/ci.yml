@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          severity: warning
+
+  executable:
+    name: Executable bit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check lazypac is executable
+        run: |
+          if [[ ! -x lazypac ]]; then
+            echo "ERROR: lazypac is not executable. Run: chmod +x lazypac"
+            exit 1
+          fi
+          echo "OK: lazypac is executable"
+
+  manpage:
+    name: Man page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install groff
+        run: sudo apt-get install -y --no-install-recommends groff
+
+      - name: Compile man page and check for errors
+        run: |
+          warnings=$(groff -man -Tascii -w all lazypac.1 2>&1 >/dev/null)
+          if [[ -n "$warnings" ]]; then
+            echo "Man page warnings/errors:"
+            echo "$warnings"
+            exit 1
+          fi
+          echo "OK: man page compiles cleanly"
+
+  pkgbuild:
+    name: PKGBUILD (namcap)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install dependencies
+        run: pacman -Sy --noconfirm git namcap
+
+      - uses: actions/checkout@v4
+
+      - name: Validate PKGBUILD with namcap
+        run: |
+          output=$(namcap PKGBUILD 2>&1)
+          echo "$output"
+          if echo "$output" | grep -q "^lazypac E:"; then
+            echo "namcap reported errors — fix before publishing to AUR"
+            exit 1
+          fi
+          echo "OK: namcap found no errors"
+
+      - name: Check .SRCINFO is present
+        run: |
+          if [[ ! -f .SRCINFO ]]; then
+            echo "ERROR: .SRCINFO is missing."
+            echo "Generate it with: makepkg --printsrcinfo > .SRCINFO"
+            exit 1
+          fi
+          echo "OK: .SRCINFO present"
