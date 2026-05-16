@@ -126,6 +126,14 @@ lazypac pacnew                       # list any .pacnew / .pacsave in /etc
 # if files are listed: sudo pacdiff
 ```
 
+**Skip a package you are not ready to upgrade yet:**
+
+Extra flags and arguments are passed through directly to the underlying tool.
+
+```bash
+lazypac safe-upgrade --ignore hyprland   # Hyprland decided to rewrite configs in Lua and you haven't migrated yet
+```
+
 ---
 
 ## Non-goals
