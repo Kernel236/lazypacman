@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+VERSION="1.0.0"
+
+if command -v yay &>/dev/null; then
+    AUR_HELPER=yay
+elif command -v paru &>/dev/null; then
+    AUR_HELPER=paru
+else
+    echo "No AUR helper found. Install one of:"
+    echo "  yay:  https://github.com/Jguer/yay"
+    echo "  paru: https://github.com/Morganamilo/paru"
+    exit 1
+fi
+
+LOG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/lazypac"
+mkdir -p "$LOG_DIR"
+
+cmd="${1:-}"
+
+case "$cmd" in
+    install)
+        $AUR_HELPER -S "${@:2}"
+        ;;
+    remove)
+        $AUR_HELPER -Rs "${@:2}"
+        ;;
+    purge)
+        $AUR_HELPER -Rns "${@:2}"
+        ;;
+    update)
+        $AUR_HELPER -Sy "${@:2}"
+        ;;
+    upgrade)
+        $AUR_HELPER -Syu "${@:2}"
+        ;;
+    safe-upgrade)
+        timestamp=$(date +"%Y%m%d_%H%M%S")
+        before_snap=$(mktemp /tmp/lazypac_before_XXXXXX)
+        after_snap=$(mktemp /tmp/lazypac_after_XXXXXX)
+        log_file="${LOG_DIR}/upgrade_${timestamp}.log"
+
+        trap 'rm -f "$before_snap" "$after_snap"' EXIT
+
+        echo "==> Snapshotting installed packages..."
+        $AUR_HELPER -Q > "$before_snap"
+
+        echo "==> Running upgrade..."
+        $AUR_HELPER -Syu "${@:2}"
+
+        echo ""
+        echo "==> Snapshotting new state..."
+        $AUR_HELPER -Q > "$after_snap"
+
+        echo "==> Generating upgrade log..."
+        {
+            echo "Lazy Pacman — upgrade log"
+            echo "Date: $(date)"
+            echo "AUR helper: $AUR_HELPER"
+            echo ""
+            changed=0
+            while IFS=' ' read -r pkg new_ver; do
+                old_ver=$(awk -v p="$pkg" '$1==p{print $2}' "$before_snap")
+                if [[ -z "$old_ver" ]]; then
+                    printf "  %-40s (new install)  %s\n" "$pkg" "$new_ver"
+                    changed=1
+                elif [[ "$old_ver" != "$new_ver" ]]; then
+                    printf "  %-40s %s  ->  %s\n" "$pkg" "$old_ver" "$new_ver"
+                    changed=1
+                fi
+            done < "$after_snap"
+            if [[ "$changed" -eq 0 ]]; then
+                echo "  Nothing was updated."
+            fi
+        } | tee "$log_file"
+
+        echo ""
+        echo "Log saved to: $log_file"
+
+        pacnew_found=$(find /etc \( -name "*.pacnew" -o -name "*.pacsave" \) 2>/dev/null)
+        if [[ -n "$pacnew_found" ]]; then
+            echo ""
+            echo "==> .pacnew/.pacsave files found — review them with:"
+            echo "      sudo pacdiff"
+            echo ""
+            echo "$pacnew_found"
+        fi
+        ;;
+    search)
+        $AUR_HELPER -Ss "${@:2}"
+        ;;
+    info)
+        $AUR_HELPER -Si "${@:2}"
+        ;;
+    list)
+        $AUR_HELPER -Qq "${@:2}"
+        ;;
+    installed)
+        $AUR_HELPER -Q "${@:2}"
+        ;;
+    check)
+        if [[ -z "${2:-}" ]]; then
+            echo "Usage: lazypac check <package>"
+            exit 1
+        fi
+        for pkg in "${@:2}"; do
+            if $AUR_HELPER -Q "$pkg" &>/dev/null; then
+                echo "$pkg: installed"
+            else
+                echo "$pkg: not installed"
+            fi
+        done
+        ;;
+    deps)
+        pactree "${@:2}"
+        ;;
+    orphans)
+        $AUR_HELPER -Qdt "${@:2}"
+        ;;
+    remove-orphans)
+        mapfile -t orphan_list < <($AUR_HELPER -Qdtq 2>/dev/null)
+        if [[ ${#orphan_list[@]} -eq 0 ]]; then
+            echo "No orphan packages found."
+        else
+            $AUR_HELPER -Rns "${orphan_list[@]}"
+        fi
+        ;;
+    pacnew)
+        echo "Searching for .pacnew and .pacsave files..."
+        found=$(find /etc \( -name "*.pacnew" -o -name "*.pacsave" \) 2>/dev/null)
+        if [[ -z "$found" ]]; then
+            echo "No .pacnew or .pacsave files found."
+        else
+            echo "$found"
+            echo ""
+            echo "To review and merge them: sudo pacdiff"
+        fi
+        ;;
+    log)
+        if [[ -z "${2:-}" ]]; then
+            if [[ -z "$(ls -A "$LOG_DIR" 2>/dev/null)" ]]; then
+                echo "No logs yet. Run 'lazypac safe-upgrade' to start logging."
+            else
+                ls -lh "$LOG_DIR"
+            fi
+        else
+            log_path="${LOG_DIR}/${2}"
+            if [[ ! -f "$log_path" ]]; then
+                echo "Log file not found: ${2}"
+                echo "Run 'lazypac log' to list available logs."
+                exit 1
+            fi
+            less "$log_path"
+        fi
+        ;;
+    logclean)
+        count=$(find "$LOG_DIR" -name "*.log" 2>/dev/null | wc -l)
+        if [[ "$count" -eq 0 ]]; then
+            echo "No log files to remove."
+        else
+            echo "Removing $count log file(s) from $LOG_DIR..."
+            find "$LOG_DIR" -name "*.log" -delete
+            echo "Done."
+        fi
+        ;;
+    clean)
+        $AUR_HELPER -Sc "${@:2}"
+        ;;
+    clean-all)
+        $AUR_HELPER -Scc "${@:2}"
+        ;;
+    version|--version|-v)
+        echo "lazypac $VERSION"
+        ;;
+    help|--help|-h)
+        echo "Lazy Pacman $VERSION — command reference"
+        echo ""
+        echo "  Package management"
+        printf "  %-22s %-34s %s\n" "install <pkg...>"   "Install one or more packages"       "-> $AUR_HELPER -S <pkg...>"
+        printf "  %-22s %-34s %s\n" "remove <pkg...>"    "Remove package + orphan deps"        "-> $AUR_HELPER -Rs <pkg...>"
+        printf "  %-22s %-34s %s\n" "purge <pkg...>"     "Remove package + config files"       "-> $AUR_HELPER -Rns <pkg...>"
+        printf "  %-22s %-34s %s\n" "update"             "Sync repositories"                   "-> $AUR_HELPER -Sy"
+        printf "  %-22s %-34s %s\n" "upgrade"            "Upgrade all packages"                "-> $AUR_HELPER -Syu"
+        printf "  %-22s %-34s %s\n" "safe-upgrade"       "Upgrade + log + pacnew check"        "-> $AUR_HELPER -Syu + log"
+        echo ""
+        echo "  Query"
+        printf "  %-22s %-34s %s\n" "search <pkg>"       "Search for a package"                "-> $AUR_HELPER -Ss <pkg>"
+        printf "  %-22s %-34s %s\n" "info <pkg>"         "Show package details"                "-> $AUR_HELPER -Si <pkg>"
+        printf "  %-22s %-34s %s\n" "list"               "List installed (names only)"         "-> $AUR_HELPER -Qq"
+        printf "  %-22s %-34s %s\n" "installed"          "List installed (names+versions)"     "-> $AUR_HELPER -Q"
+        printf "  %-22s %-34s %s\n" "check <pkg...>"     "Check if package(s) are installed"  "-> $AUR_HELPER -Q <pkg>"
+        printf "  %-22s %-34s %s\n" "deps <pkg>"         "Show package dependency tree"        "-> pactree <pkg>"
+        printf "  %-22s %-34s %s\n" "orphans"            "List orphan packages"                "-> $AUR_HELPER -Qdt"
+        echo ""
+        echo "  Pacnew / pacsave"
+        printf "  %-22s %-34s %s\n" "pacnew"             "Find .pacnew/.pacsave files"         "-> find /etc -name *.pacnew"
+        echo ""
+        echo "  Logs"
+        printf "  %-22s %-34s %s\n" "log"                "List upgrade logs"                   "-> ls $LOG_DIR"
+        printf "  %-22s %-34s %s\n" "log <file>"         "Read a log file"                     "-> less $LOG_DIR/<file>"
+        printf "  %-22s %-34s %s\n" "logclean"           "Remove all upgrade logs"             "-> rm $LOG_DIR/*.log"
+        echo ""
+        echo "  Cleanup"
+        printf "  %-22s %-34s %s\n" "remove-orphans"     "Remove all orphan packages"          "-> $AUR_HELPER -Rns \$($AUR_HELPER -Qdtq)"
+        printf "  %-22s %-34s %s\n" "clean"              "Remove old cached packages"          "-> $AUR_HELPER -Sc"
+        printf "  %-22s %-34s %s\n" "clean-all"          "Remove all cached packages"          "-> $AUR_HELPER -Scc"
+        echo ""
+        echo "Tip: multiple packages and extra flags are passed through directly."
+        echo "     lazypac install firefox chromium --noconfirm"
+        echo "     lazypac upgrade --devel"
+        ;;
+    *)
+        echo "Unknown command: '$cmd'"
+        echo "Run 'lazypac help' to see available commands."
+        exit 1
+        ;;
+esac
