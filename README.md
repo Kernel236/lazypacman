@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/Kernel236/lazypacman/actions/workflows/ci.yml"><img src="https://github.com/Kernel236/lazypacman/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Kernel236/lazypacman/stargazers"><img src="https://img.shields.io/github/stars/Kernel236/lazypacman?label=thanks%20for%20the%20%E2%AD%90&color=grey" alt="Stars"></a>
   <a href="https://aur.archlinux.org/packages/lazypac"><img src="https://img.shields.io/aur/version/lazypac" alt="AUR version"></a>
   <img src="https://img.shields.io/badge/made%20with-%E2%9D%A4-red" alt="Made with love">
 </p>
