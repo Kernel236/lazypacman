@@ -123,36 +123,3 @@ Updated packages:
   python                                   3.12.3-1  →  3.12.4-1
   some-aur-package                         (new install)  1.2.3-1
 ```
-
----
-
-## AUR Publish Instructions (Maintainer)
-
-1. Cut a GitHub release and get the real tarball checksum:
-   ```bash
-   # After pushing the tag and letting GitHub generate the tarball:
-   makepkg -g >> PKGBUILD   # replaces sha256sums=('SKIP') with the real hash
-   ```
-
-2. Regenerate `.SRCINFO` — required every time PKGBUILD changes:
-   ```bash
-   makepkg --printsrcinfo > .SRCINFO
-   ```
-
-3. Build and test locally:
-   ```bash
-   makepkg -si
-   ```
-
-4. Validate with namcap (must pass with no errors, warnings are worth reading):
-   ```bash
-   namcap PKGBUILD
-   namcap lazypac-*.pkg.tar.zst
-   ```
-
-5. Publish to the AUR (both PKGBUILD and .SRCINFO must be committed):
-   ```bash
-   aurpublish lazypac
-   ```
-
-> `.SRCINFO` is what the AUR actually indexes. If it is missing or out of sync with PKGBUILD, the package will not appear in search results or will show wrong metadata.
