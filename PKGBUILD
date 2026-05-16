@@ -11,7 +11,7 @@ optdepends=('yay: AUR helper (recommended)'
             'paru: AUR helper'
             'pacman-contrib: provides pacdiff, suggested after safe-upgrade')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('3362db5ff814db6c993722c8fc5e75f3036b625bce511599073f8613321f4477')
 
 package() {
     cd "$srcdir/lazypacman-$pkgver"
