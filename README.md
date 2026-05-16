@@ -37,7 +37,7 @@ paru -S lazypac
 
 | Package | Required for |
 |---|---|
-| `yay` or `paru` | any command (one of them is mandatory) |
+| `yay` or `paru` | optional — falls back to plain `pacman` if neither is found |
 | `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew` when files are found) |
 
 ---
