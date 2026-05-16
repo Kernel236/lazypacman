@@ -37,7 +37,7 @@ paru -S lazypac
 
 | Package | Required for |
 |---|---|
-| `yay` or `paru` | any command (one of them is mandatory) |
+| `yay` or `paru` | optional — falls back to plain `pacman` if neither is found |
 | `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew` when files are found) |
 
 ---
@@ -93,7 +93,7 @@ After an upgrade, pacman may leave `.pacnew` (new default config) or `.pacsave` 
 | `clean` | Remove old cached packages | `yay -Sc` |
 | `clean-all` | Remove all cached packages | `yay -Scc` |
 
-> The AUR helper shown (`yay`) reflects whichever is detected on your system at runtime. If `paru` is installed instead, all commands use `paru`.
+> The AUR helper shown (`yay`) reflects whichever is detected on your system at runtime. If `paru` is installed instead, all commands use `paru`. If neither is found, commands fall back to plain `pacman`.
 
 ---
 
