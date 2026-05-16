@@ -3,15 +3,33 @@ set -uo pipefail
 
 VERSION="1.0.0"
 
+# Detection order: yay > paru > pacman
 if command -v yay &>/dev/null; then
-    AUR_HELPER=yay
+    PKG=yay
 elif command -v paru &>/dev/null; then
-    AUR_HELPER=paru
+    PKG=paru
+elif command -v pacman &>/dev/null; then
+    PKG=pacman
 else
-    echo "No AUR helper found. Install one of:"
-    echo "  yay:  https://github.com/Jguer/yay"
-    echo "  paru: https://github.com/Morganamilo/paru"
+    echo "No package manager found."
     exit 1
+fi
+
+# yay and paru handle privilege escalation themselves.
+# Plain pacman needs sudo for any operation that writes to the system.
+pkg_write() {
+    if [[ "$PKG" == "pacman" ]]; then
+        sudo pacman "$@"
+    else
+        "$PKG" "$@"
+    fi
+}
+
+# Label used in help output to show what actually runs
+if [[ "$PKG" == "pacman" ]]; then
+    PKG_W="sudo pacman"
+else
+    PKG_W="$PKG"
 fi
 
 LOG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/lazypac"
@@ -21,19 +39,22 @@ cmd="${1:-}"
 
 case "$cmd" in
     install)
-        $AUR_HELPER -S "${@:2}"
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac install <package...>"; exit 1; }
+        pkg_write -S "${@:2}"
         ;;
     remove)
-        $AUR_HELPER -Rs "${@:2}"
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac remove <package...>"; exit 1; }
+        pkg_write -Rs "${@:2}"
         ;;
     purge)
-        $AUR_HELPER -Rns "${@:2}"
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac purge <package...>"; exit 1; }
+        pkg_write -Rns "${@:2}"
         ;;
     update)
-        $AUR_HELPER -Sy "${@:2}"
+        pkg_write -Sy
         ;;
     upgrade)
-        $AUR_HELPER -Syu "${@:2}"
+        pkg_write -Syu "${@:2}"
         ;;
     safe-upgrade)
         timestamp=$(date +"%Y%m%d_%H%M%S")
@@ -44,29 +65,29 @@ case "$cmd" in
         trap 'rm -f "$before_snap" "$after_snap"' EXIT
 
         echo "==> Snapshotting installed packages..."
-        $AUR_HELPER -Q > "$before_snap"
+        "$PKG" -Q > "$before_snap"
 
         echo "==> Running upgrade..."
-        $AUR_HELPER -Syu "${@:2}"
+        pkg_write -Syu "${@:2}"
 
         echo ""
         echo "==> Snapshotting new state..."
-        $AUR_HELPER -Q > "$after_snap"
+        "$PKG" -Q > "$after_snap"
 
         echo "==> Generating upgrade log..."
         {
             echo "Lazy Pacman — upgrade log"
             echo "Date: $(date)"
-            echo "AUR helper: $AUR_HELPER"
+            echo "Package manager: $PKG"
             echo ""
             changed=0
-            while IFS=' ' read -r pkg new_ver; do
-                old_ver=$(awk -v p="$pkg" '$1==p{print $2}' "$before_snap")
+            while IFS=' ' read -r p new_ver; do
+                old_ver=$(awk -v name="$p" '$1==name{print $2}' "$before_snap")
                 if [[ -z "$old_ver" ]]; then
-                    printf "  %-40s (new install)  %s\n" "$pkg" "$new_ver"
+                    printf "  %-40s (new install)  %s\n" "$p" "$new_ver"
                     changed=1
                 elif [[ "$old_ver" != "$new_ver" ]]; then
-                    printf "  %-40s %s  ->  %s\n" "$pkg" "$old_ver" "$new_ver"
+                    printf "  %-40s %s  ->  %s\n" "$p" "$old_ver" "$new_ver"
                     changed=1
                 fi
             done < "$after_snap"
@@ -88,42 +109,48 @@ case "$cmd" in
         fi
         ;;
     search)
-        $AUR_HELPER -Ss "${@:2}"
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac search <term>"; exit 1; }
+        "$PKG" -Ss "${@:2}"
         ;;
     info)
-        $AUR_HELPER -Si "${@:2}"
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac info <package>"; exit 1; }
+        "$PKG" -Si "${@:2}"
         ;;
     list)
-        $AUR_HELPER -Qq "${@:2}"
+        "$PKG" -Qq
         ;;
     installed)
-        $AUR_HELPER -Q "${@:2}"
+        "$PKG" -Q
         ;;
     check)
-        if [[ -z "${2:-}" ]]; then
-            echo "Usage: lazypac check <package>"
-            exit 1
-        fi
-        for pkg in "${@:2}"; do
-            if $AUR_HELPER -Q "$pkg" &>/dev/null; then
-                echo "$pkg: installed"
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac check <package...>"; exit 1; }
+        for pkgname in "${@:2}"; do
+            if "$PKG" -Q "$pkgname" &>/dev/null; then
+                echo "$pkgname: installed"
             else
-                echo "$pkg: not installed"
+                echo "$pkgname: not installed"
             fi
         done
         ;;
     deps)
+        [[ -z "${2:-}" ]] && { echo "Usage: lazypac deps <package>"; exit 1; }
+        if ! command -v pactree &>/dev/null; then
+            echo "pactree not found — install pacman-contrib"
+            exit 1
+        fi
         pactree "${@:2}"
         ;;
     orphans)
-        $AUR_HELPER -Qdt "${@:2}"
+        if ! "$PKG" -Qdt 2>/dev/null; then
+            echo "No orphan packages."
+        fi
         ;;
     remove-orphans)
-        mapfile -t orphan_list < <($AUR_HELPER -Qdtq 2>/dev/null)
+        mapfile -t orphan_list < <("$PKG" -Qdtq 2>/dev/null)
         if [[ ${#orphan_list[@]} -eq 0 ]]; then
             echo "No orphan packages found."
         else
-            $AUR_HELPER -Rns "${orphan_list[@]}"
+            pkg_write -Rns "${orphan_list[@]}"
         fi
         ;;
     pacnew)
@@ -165,10 +192,10 @@ case "$cmd" in
         fi
         ;;
     clean)
-        $AUR_HELPER -Sc "${@:2}"
+        pkg_write -Sc "${@:2}"
         ;;
     clean-all)
-        $AUR_HELPER -Scc "${@:2}"
+        pkg_write -Scc "${@:2}"
         ;;
     version|--version|-v)
         echo "lazypac $VERSION"
@@ -177,21 +204,21 @@ case "$cmd" in
         echo "Lazy Pacman $VERSION — command reference"
         echo ""
         echo "  Package management"
-        printf "  %-22s %-34s %s\n" "install <pkg...>"   "Install one or more packages"       "-> $AUR_HELPER -S <pkg...>"
-        printf "  %-22s %-34s %s\n" "remove <pkg...>"    "Remove package + orphan deps"        "-> $AUR_HELPER -Rs <pkg...>"
-        printf "  %-22s %-34s %s\n" "purge <pkg...>"     "Remove package + config files"       "-> $AUR_HELPER -Rns <pkg...>"
-        printf "  %-22s %-34s %s\n" "update"             "Sync repositories"                   "-> $AUR_HELPER -Sy"
-        printf "  %-22s %-34s %s\n" "upgrade"            "Upgrade all packages"                "-> $AUR_HELPER -Syu"
-        printf "  %-22s %-34s %s\n" "safe-upgrade"       "Upgrade + log + pacnew check"        "-> $AUR_HELPER -Syu + log"
+        printf "  %-22s %-34s %s\n" "install <pkg...>"   "Install one or more packages"       "-> $PKG_W -S <pkg...>"
+        printf "  %-22s %-34s %s\n" "remove <pkg...>"    "Remove package + orphan deps"        "-> $PKG_W -Rs <pkg...>"
+        printf "  %-22s %-34s %s\n" "purge <pkg...>"     "Remove package + config files"       "-> $PKG_W -Rns <pkg...>"
+        printf "  %-22s %-34s %s\n" "update"             "Sync repositories"                   "-> $PKG_W -Sy"
+        printf "  %-22s %-34s %s\n" "upgrade"            "Upgrade all packages"                "-> $PKG_W -Syu"
+        printf "  %-22s %-34s %s\n" "safe-upgrade"       "Upgrade + log + pacnew check"        "-> $PKG_W -Syu + log"
         echo ""
         echo "  Query"
-        printf "  %-22s %-34s %s\n" "search <pkg>"       "Search for a package"                "-> $AUR_HELPER -Ss <pkg>"
-        printf "  %-22s %-34s %s\n" "info <pkg>"         "Show package details"                "-> $AUR_HELPER -Si <pkg>"
-        printf "  %-22s %-34s %s\n" "list"               "List installed (names only)"         "-> $AUR_HELPER -Qq"
-        printf "  %-22s %-34s %s\n" "installed"          "List installed (names+versions)"     "-> $AUR_HELPER -Q"
-        printf "  %-22s %-34s %s\n" "check <pkg...>"     "Check if package(s) are installed"  "-> $AUR_HELPER -Q <pkg>"
+        printf "  %-22s %-34s %s\n" "search <term>"      "Search for a package"                "-> $PKG -Ss <term>"
+        printf "  %-22s %-34s %s\n" "info <pkg>"         "Show package details"                "-> $PKG -Si <pkg>"
+        printf "  %-22s %-34s %s\n" "list"               "List installed (names only)"         "-> $PKG -Qq"
+        printf "  %-22s %-34s %s\n" "installed"          "List installed (names+versions)"     "-> $PKG -Q"
+        printf "  %-22s %-34s %s\n" "check <pkg...>"     "Check if package(s) are installed"  "-> $PKG -Q <pkg>"
         printf "  %-22s %-34s %s\n" "deps <pkg>"         "Show package dependency tree"        "-> pactree <pkg>"
-        printf "  %-22s %-34s %s\n" "orphans"            "List orphan packages"                "-> $AUR_HELPER -Qdt"
+        printf "  %-22s %-34s %s\n" "orphans"            "List orphan packages"                "-> $PKG -Qdt"
         echo ""
         echo "  Pacnew / pacsave"
         printf "  %-22s %-34s %s\n" "pacnew"             "Find .pacnew/.pacsave files"         "-> find /etc -name *.pacnew"
@@ -202,13 +229,17 @@ case "$cmd" in
         printf "  %-22s %-34s %s\n" "logclean"           "Remove all upgrade logs"             "-> rm $LOG_DIR/*.log"
         echo ""
         echo "  Cleanup"
-        printf "  %-22s %-34s %s\n" "remove-orphans"     "Remove all orphan packages"          "-> $AUR_HELPER -Rns \$($AUR_HELPER -Qdtq)"
-        printf "  %-22s %-34s %s\n" "clean"              "Remove old cached packages"          "-> $AUR_HELPER -Sc"
-        printf "  %-22s %-34s %s\n" "clean-all"          "Remove all cached packages"          "-> $AUR_HELPER -Scc"
+        printf "  %-22s %-34s %s\n" "remove-orphans"     "Remove all orphan packages"          "-> $PKG_W -Rns \$($PKG -Qdtq)"
+        printf "  %-22s %-34s %s\n" "clean"              "Remove old cached packages"          "-> $PKG_W -Sc"
+        printf "  %-22s %-34s %s\n" "clean-all"          "Remove all cached packages"          "-> $PKG_W -Scc"
         echo ""
         echo "Tip: multiple packages and extra flags are passed through directly."
         echo "     lazypac install firefox chromium --noconfirm"
         echo "     lazypac upgrade --devel"
+        ;;
+    "")
+        echo "Unknown command. Run 'lazypac help'."
+        exit 1
         ;;
     *)
         echo "Unknown command: '$cmd'"

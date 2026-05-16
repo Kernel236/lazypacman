@@ -10,7 +10,7 @@
 
 A simple bash wrapper for common `pacman`/`yay`/`paru` commands. No databases, no tracking, no hidden logic, just readable aliases. You always know exactly what's running underneath.
 
-Automatically detects your AUR helper (`yay` preferred, then `paru`) at startup.
+Automatically detects your package manager at startup: `yay` first, then `paru`, then plain `pacman`. Write operations (`install`, `remove`, `upgrade`...) run with `sudo` automatically when falling back to pacman.
 
 *for those who don't want to memorise flags and their combinations*
 
@@ -131,7 +131,7 @@ lazypac pacnew                       # list any .pacnew / .pacsave in /etc
 
 - **Not a pacman replacement.** lazypac is a thin alias layer; anything outside its command set goes straight to `yay`, `paru`, or `pacman` directly.
 - **No lock or recovery management.** Database locks, partial upgrades, and rollbacks are out of scope — handle them with pacman as usual.
-- **Requires yay or paru.** lazypac does not work with a plain pacman-only setup.
+- **No AUR without an AUR helper.** With plain pacman, `install` and `search` only reach the official repositories.
 
 ---
 

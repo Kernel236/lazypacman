@@ -9,7 +9,7 @@ load helpers
 @test "exits 1 with message when no AUR helper is found" {
     run env PATH="/usr/bin:/bin" bash "$LAZYPAC" version
     [ "$status" -eq 1 ]
-    [[ "$output" == *"No AUR helper found"* ]]
+    [[ "$output" == *"No package manager found"* ]]
 }
 
 # ---------------------------------------------------------------------------
