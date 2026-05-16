@@ -97,6 +97,44 @@ After an upgrade, pacman may leave `.pacnew` (new default config) or `.pacsave` 
 
 ---
 
+## Daily usage examples
+
+**Weekly maintenance — upgrade, check what changed, then clean the cache:**
+
+```bash
+lazypac safe-upgrade
+lazypac log                          # list saved upgrade logs
+lazypac log upgrade_20260516_120000.log   # read what actually changed
+lazypac remove-orphans               # drop deps that are no longer needed
+lazypac clean                        # remove old cached package versions
+```
+
+**Before installing something new — search, inspect, check disk impact:**
+
+```bash
+lazypac search neovim                # find available packages
+lazypac info neovim                  # read description, deps, install size
+lazypac check neovim                 # confirm it is not already installed
+lazypac install neovim
+```
+
+**After a big upgrade — find leftover config files:**
+
+```bash
+lazypac pacnew                       # list any .pacnew / .pacsave in /etc
+# if files are listed: sudo pacdiff
+```
+
+---
+
+## Non-goals
+
+- **Not a pacman replacement.** lazypac is a thin alias layer; anything outside its command set goes straight to `yay`, `paru`, or `pacman` directly.
+- **No lock or recovery management.** Database locks, partial upgrades, and rollbacks are out of scope — handle them with pacman as usual.
+- **Requires yay or paru.** lazypac does not work with a plain pacman-only setup.
+
+---
+
 ## Flag passthrough and multiple packages
 
 All extra arguments after the command are forwarded verbatim to the underlying tool. Multiple package names work the same way.
