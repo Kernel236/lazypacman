@@ -8,9 +8,11 @@
   <img src="https://img.shields.io/badge/made%20with-%E2%9D%A4-red" alt="Made with love">
 </p>
 
-A dead-simple bash wrapper for common `pacman`/`yay`/`paru` commands. No databases, no tracking, no hidden logic, just readable aliases. You always know exactly what's running underneath.
+A simple bash wrapper for common `pacman`/`yay`/`paru` commands. No databases, no tracking, no hidden logic, just readable aliases. You always know exactly what's running underneath.
 
 Automatically detects your AUR helper (`yay` preferred, then `paru`) at startup.
+
+*for those who don't want to memorise flags and their combinations*
 
 ---
 
