@@ -1,0 +1,644 @@
+.TH LAZYPAC 1 "2026-05-16" "1.0.0" "Lazy Pacman"
+
+.SH NAME
+lazypac \- simple human-readable wrapper for pacman/yay/paru
+
+.SH SYNOPSIS
+.B lazypac
+.I command
+.RI [ package ...]
+.RI [ flags ...]
+
+.SH DESCRIPTION
+.B lazypac
+is a thin bash wrapper around
+.BR yay (1)
+or
+.BR paru (1)
+(whichever is installed) that maps short, readable subcommands to their
+underlying pacman flags.
+No databases, no tracking, no hidden logic \(em every command prints exactly
+what it runs underneath.
+.PP
+At startup,
+.B lazypac
+detects the AUR helper in order: first
+.BR yay ,
+then
+.BR paru .
+If neither is found it exits with install instructions.
+.PP
+Upgrade logs are stored in
+.I $XDG_DATA_HOME/lazypac
+(defaults to
+.IR ~/.local/share/lazypac ).
+
+.SH COMMANDS
+
+.SS Package management
+
+.TP
+.BI "install " "pkg [pkg ...]"
+Install one or more packages from the official repositories or the AUR.
+Runs:
+.B $AUR_HELPER -S
+.I pkg ...
+.IP
+.I Example \(em install a single package:
+.RS
+.nf
+lazypac install firefox
+.fi
+.RE
+.IP
+.I Example \(em install several packages at once without confirmation prompts:
+.RS
+.nf
+lazypac install firefox chromium vlc --noconfirm
+.fi
+.RE
+
+.TP
+.BI "remove " "pkg [pkg ...]"
+Remove one or more packages together with any dependencies that would
+become orphaned after the removal.
+Configuration files in
+.I /etc
+are left untouched (use
+.B purge
+to remove them as well).
+Runs:
+.B $AUR_HELPER -Rs
+.I pkg ...
+.IP
+.I Example \(em remove a package you no longer use:
+.RS
+.nf
+lazypac remove gimp
+.fi
+.RE
+.IP
+.I Example \(em remove a group of related packages in one command:
+.RS
+.nf
+lazypac remove gimp inkscape krita
+.fi
+.RE
+
+.TP
+.BI "purge " "pkg [pkg ...]"
+Like
+.B remove
+but also deletes configuration files left behind by the package(s) in
+.IR /etc .
+Use this when you want a completely clean uninstall and have no interest
+in keeping your old settings.
+Runs:
+.B $AUR_HELPER -Rns
+.I pkg ...
+.IP
+.I Example \(em cleanly uninstall a package and wipe its config:
+.RS
+.nf
+lazypac purge openssh
+.fi
+.RE
+.IP
+.I Example \(em purge several packages non-interactively:
+.RS
+.nf
+lazypac purge openssh cups --noconfirm
+.fi
+.RE
+
+.TP
+.B update
+Sync the package databases without upgrading anything.
+Useful before running
+.B search
+or
+.B info
+to make sure the metadata is current, or when you want to check for
+available upgrades without applying them yet.
+Runs:
+.B $AUR_HELPER -Sy
+.IP
+.I Example \(em refresh package databases:
+.RS
+.nf
+lazypac update
+.fi
+.RE
+
+.TP
+.B upgrade
+Sync databases and upgrade all installed packages, including AUR packages.
+Runs:
+.B $AUR_HELPER -Syu
+.IP
+.I Example \(em standard full system upgrade:
+.RS
+.nf
+lazypac upgrade
+.fi
+.RE
+.IP
+.I Example \(em also rebuild AUR packages that have updated VCS sources (git, svn, ...):
+.RS
+.nf
+lazypac upgrade --devel
+.fi
+.RE
+
+.TP
+.B safe-upgrade
+Like
+.B upgrade
+but takes a snapshot of all installed package versions before and after the
+upgrade, compares them, and writes a human-readable log file to
+.IR $LOG_DIR/upgrade_TIMESTAMP.log .
+The log lists every package whose version changed (old \(-> new) and every
+package that was newly installed.
+If nothing changed it records that as well.
+.PP
+After the upgrade,
+.B safe-upgrade
+scans
+.I /etc
+for any
+.I .pacnew
+or
+.I .pacsave
+files left behind by pacman and, if found, prints their paths with a reminder
+to run
+.B sudo pacdiff
+to resolve them.
+.PP
+Temp snapshots in
+.I /tmp
+are created with
+.BR mktemp (1)
+(random name, created atomically) and removed on exit via
+.BR trap ,
+even if interrupted.
+Runs:
+.B $AUR_HELPER -Syu
+followed by snapshot, diff, and pacnew check.
+.IP
+.I Example \(em upgrade with a full version diff saved for review later:
+.RS
+.nf
+lazypac safe-upgrade
+.fi
+.RE
+.IP
+.I Example \(em safe upgrade, including VCS rebuilds, without confirmation prompts:
+.RS
+.nf
+lazypac safe-upgrade --devel --noconfirm
+.fi
+.RE
+
+.SS Query
+
+.TP
+.BI "search " "pkg"
+Search repositories and the AUR for packages whose name or description
+matches
+.IR pkg .
+Runs:
+.B $AUR_HELPER -Ss
+.I pkg
+.IP
+.I Example \(em find packages related to a PDF viewer:
+.RS
+.nf
+lazypac search pdf viewer
+.fi
+.RE
+.IP
+.I Example \(em search the AUR and sort results by vote count:
+.RS
+.nf
+lazypac search spotify --sortby votes
+.fi
+.RE
+
+.TP
+.BI "info " "pkg"
+Display detailed information about a package: version, description,
+dependencies, install size, build date, and more.
+Works for both installed and uninstalled packages.
+Runs:
+.B $AUR_HELPER -Si
+.I pkg
+.IP
+.I Example \(em inspect a package before deciding to install it:
+.RS
+.nf
+lazypac info neovim
+.fi
+.RE
+
+.TP
+.B list
+Print the names of all installed packages without version numbers.
+Useful for piping into other tools.
+Runs:
+.B $AUR_HELPER -Qq
+.IP
+.I Example \(em count how many packages are installed:
+.RS
+.nf
+lazypac list | wc -l
+.fi
+.RE
+.IP
+.I Example \(em check whether a specific package name appears in the list:
+.RS
+.nf
+lazypac list | grep python
+.fi
+.RE
+
+.TP
+.B installed
+Print the names and versions of all installed packages.
+Runs:
+.B $AUR_HELPER -Q
+.IP
+.I Example \(em see what is installed and pipe it to a file for backup:
+.RS
+.nf
+lazypac installed > ~/pkg-backup.txt
+.fi
+.RE
+.IP
+.I Example \(em find all installed packages whose name contains "lib":
+.RS
+.nf
+lazypac installed | grep lib
+.fi
+.RE
+
+.TP
+.BI "check " "pkg [pkg ...]"
+For each package listed, print
+.I "pkg: installed"
+or
+.I "pkg: not installed"
+on its own line.
+Each package is checked independently, so mixed results are reported correctly.
+Runs:
+.B $AUR_HELPER -Q
+.I pkg
+for each argument.
+.IP
+.I Example \(em verify a single package before a script relies on it:
+.RS
+.nf
+lazypac check git
+.fi
+.RE
+.IP
+.I Example \(em check several tools at once after a fresh install:
+.RS
+.nf
+lazypac check git curl wget rsync
+.fi
+.RE
+
+.TP
+.BI "deps " "pkg"
+Display the full dependency tree for a package, recursively expanding
+all dependencies into a visual tree.
+Requires
+.BR pactree (8),
+which ships with
+.BR pacman .
+Runs:
+.B pactree
+.I pkg
+.IP
+.I Example \(em understand what a package pulls in before installing it:
+.RS
+.nf
+lazypac deps mesa
+.fi
+.RE
+.IP
+.I Example \(em show the reverse dependency tree (what depends on this package):
+.RS
+.nf
+lazypac deps -r python
+.fi
+.RE
+
+.TP
+.B orphans
+List packages that were installed as dependencies but are no longer
+required by any other installed package.
+These are safe candidates for removal.
+Runs:
+.B $AUR_HELPER -Qdt
+.IP
+.I Example \(em check for orphans after removing a large application:
+.RS
+.nf
+lazypac orphans
+.fi
+.RE
+.IP
+.I Example \(em pipe the orphan list into a file to review before removing:
+.RS
+.nf
+lazypac orphans > ~/orphans.txt
+.fi
+.RE
+
+.SS Pacnew / pacsave
+
+After a system upgrade, pacman may leave behind
+.I .pacnew
+files (new default configs the package ships with, not applied to avoid
+overwriting your customisations) or
+.I .pacsave
+files (backups of your configs that would have been overwritten).
+Ignoring these over time leads to missed security fixes and misconfigured
+services.
+These two commands help you find and resolve them promptly.
+
+.TP
+.B pacnew
+Search
+.I /etc
+recursively for any
+.I .pacnew
+or
+.I .pacsave
+files and list their paths.
+If none are found, prints a confirmation message.
+Runs:
+.B find /etc \(rs( -name *.pacnew -o -name *.pacsave \(rs)
+.IP
+.I Example \(em check for leftover config files after an upgrade:
+.RS
+.nf
+lazypac pacnew
+# /etc/ssh/sshd_config.pacnew
+# /etc/locale.gen.pacnew
+.fi
+.RE
+
+.SS Logs
+
+.TP
+.B log
+List all upgrade log files saved by
+.BR safe-upgrade ,
+showing file sizes and timestamps.
+If no logs exist yet, prints a hint to run
+.BR safe-upgrade .
+Runs:
+.B ls -lh $LOG_DIR
+.IP
+.I Example \(em see how many upgrades have been logged and how large each file is:
+.RS
+.nf
+lazypac log
+# -rw-r--r-- 1 ric ric 1.2K May 16 12:00 upgrade_20260516_120000.log
+# -rw-r--r-- 1 ric ric 3.4K May 10 09:15 upgrade_20260510_091500.log
+.fi
+.RE
+
+.TP
+.BI "log " file
+Open
+.I file
+from the log directory in
+.BR less (1)
+for reading.
+.I file
+must be a bare filename (not a path); use
+.B lazypac log
+first to see what is available.
+If the file does not exist,
+.B lazypac
+prints an error and suggests listing available logs.
+Runs:
+.B less $LOG_DIR/file
+.IP
+.I Example \(em read the log from a specific upgrade:
+.RS
+.nf
+lazypac log upgrade_20260516_120000.log
+.fi
+.RE
+
+.TP
+.B logclean
+Delete all
+.I *.log
+files from the log directory and print how many were removed.
+.IP
+.I Example \(em free up space and start a fresh log history:
+.RS
+.nf
+lazypac logclean
+# Removing 5 log file(s) from /home/ric/.local/share/lazypac...
+# Done.
+.fi
+.RE
+
+.SS Cleanup
+
+.TP
+.B remove-orphans
+Remove all orphan packages and their leftover config files.
+If no orphans are found the command exits cleanly with a message instead
+of passing an empty argument list to the AUR helper.
+Runs:
+.B $AUR_HELPER -Rns $($AUR_HELPER -Qdtq)
+.IP
+.I Example \(em clean up after removing a large application that pulled in many deps:
+.RS
+.nf
+lazypac remove-orphans
+.fi
+.RE
+
+.TP
+.B clean
+Remove cached package files for packages that are no longer the latest
+installed version, freeing up disk space while keeping the current version
+cached (useful for quick downgrades).
+Runs:
+.B $AUR_HELPER -Sc
+.IP
+.I Example \(em reclaim disk space after a large upgrade:
+.RS
+.nf
+lazypac clean
+.fi
+.RE
+
+.TP
+.B clean-all
+Remove the entire package cache, including the currently installed versions.
+Use with care \(em after this you cannot downgrade without re-downloading.
+Runs:
+.B $AUR_HELPER -Scc
+.IP
+.I Example \(em wipe the cache completely on a low-disk-space system:
+.RS
+.nf
+lazypac clean-all
+.fi
+.RE
+
+.TP
+.B help
+Print a formatted command reference table showing every command, its
+description, and the underlying call with the detected AUR helper name.
+.IP
+.I Example:
+.RS
+.nf
+lazypac help
+.fi
+.RE
+
+.TP
+.B version
+Print the installed version of
+.BR lazypac .
+.IP
+.I Example:
+.RS
+.nf
+lazypac version
+# lazypac 1.0.0
+.fi
+.RE
+
+.SH FLAG PASSTHROUGH
+Every argument that appears after the
+.I command
+(and after any package names) is forwarded verbatim to the underlying
+tool.
+This means any flag accepted by
+.BR yay / paru / pacman
+works transparently:
+
+.PP
+.RS
+.nf
+lazypac install firefox --noconfirm
+    \(-> yay -S firefox --noconfirm
+
+lazypac upgrade --devel
+    \(-> yay -Syu --devel
+
+lazypac safe-upgrade --devel
+    \(-> yay -Syu --devel  (with before/after logging)
+
+lazypac search linux --sortby votes
+    \(-> yay -Ss linux --sortby votes
+.fi
+.RE
+
+.SH MULTIPLE PACKAGES
+All commands that accept a package name accept multiple package names.
+They are all forwarded to the underlying tool in one call:
+
+.PP
+.RS
+.nf
+lazypac install firefox chromium vlc
+    \(-> yay -S firefox chromium vlc
+
+lazypac remove gimp inkscape
+    \(-> yay -Rs gimp inkscape
+
+lazypac check git curl wget rsync
+    \(-> reports each package independently
+
+lazypac purge gimp inkscape --noconfirm
+    \(-> yay -Rns gimp inkscape --noconfirm
+.fi
+.RE
+
+.SH FILES
+.TP
+.I ~/.local/share/lazypac/
+Default log directory. Override by setting
+.B XDG_DATA_HOME
+before running lazypac.
+
+.TP
+.I ~/.local/share/lazypac/upgrade_TIMESTAMP.log
+Per-upgrade log file produced by
+.BR safe-upgrade .
+Each file records the date, the AUR helper used, and a table of every
+package whose version changed (old version \(-> new version) or that was
+newly installed.
+
+.SH LICENSE
+.B lazypac
+is released under the
+.B MIT License.
+.PP
+MIT was chosen deliberately for a tool of this nature:
+.PP
+.B It imposes no conditions on the user.
+Anyone can use, copy, modify, fork, or embed this script in any project
+\(em personal, commercial, or proprietary \(em without asking permission
+and without having to open-source their own work.
+This matters for a system administration tool that people often adapt and
+include in their own dotfiles, deployment scripts, or internal tooling.
+.PP
+.B It is compatible with everything.
+MIT is compatible with GPL, LGPL, Apache 2.0, and virtually every other
+license.
+A GPLv3 tool (like
+.BR yay )
+can ship alongside MIT code without license conflicts.
+A BSD-licensed init system can bundle a copy of this script.
+.PP
+.B It matches the scope of the project.
+.B lazypac
+wraps tools it does not own or redistribute.
+There is no complex IP to protect and no need for the reciprocal sharing
+requirements of copyleft licenses like GPL.
+The MIT License is the lightest correct choice for a wrapper script whose
+entire value is convenience, not a novel algorithm or library.
+.PP
+.B It is recognised and trusted worldwide.
+Developers, legal teams, and package managers (including the AUR) treat
+MIT as a known quantity.
+Using it removes friction for anyone who wants to contribute, redistribute,
+or audit the project's licensing status.
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Unknown command, missing AUR helper, missing optional dependency, or the
+underlying tool returned an error.
+
+.SH SEE ALSO
+.BR yay (1),
+.BR paru (1),
+.BR pacman (8),
+.BR pactree (8),
+.BR pacdiff (8),
+.BR mktemp (1),
+.BR less (1)
+
+.SH BUGS
+Report bugs at https://github.com/Kernel236/lazypacman/issues
+
+.SH AUTHOR
+Kernel236 <riccardo-del-signore@hotmail.it>
