@@ -44,10 +44,18 @@ load helpers
 # update / upgrade
 # ---------------------------------------------------------------------------
 
-@test "update calls yay -Sy" {
-    run bash "$LAZYPAC" update
+@test "update prints warning and runs -Sy when confirmed with y" {
+    run bash -c "echo 'y' | bash '$LAZYPAC' update"
     [ "$status" -eq 0 ]
-    [ "$output" = "yay -Sy" ]
+    [[ "$output" == *"WARNING"* ]]
+    [[ "$output" == *"yay -Sy"* ]]
+}
+
+@test "update aborts when not confirmed" {
+    run bash -c "echo 'n' | bash '$LAZYPAC' update"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"WARNING"* ]]
+    [[ "$output" == *"Aborted"* ]]
 }
 
 @test "upgrade calls yay -Syu" {
@@ -66,16 +74,33 @@ load helpers
 # clean
 # ---------------------------------------------------------------------------
 
-@test "clean calls yay -Sc" {
-    run bash "$LAZYPAC" clean
+@test "cache-clean calls pacman -Sc" {
+    run bash "$LAZYPAC" cache-clean
     [ "$status" -eq 0 ]
-    [ "$output" = "yay -Sc" ]
+    [[ "$output" == *"pacman -Sc"* ]]
 }
 
-@test "clean-all calls yay -Scc" {
-    run bash "$LAZYPAC" clean-all
+@test "cache-clean-all calls pacman -Scc" {
+    run bash "$LAZYPAC" cache-clean-all
     [ "$status" -eq 0 ]
-    [ "$output" = "yay -Scc" ]
+    [[ "$output" == *"pacman -Scc"* ]]
+}
+
+@test "cache-clean-old calls paccache -ruk0" {
+    run bash "$LAZYPAC" cache-clean-old
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"paccache"* ]]
+    [[ "$output" == *"-ruk0"* ]]
+}
+
+@test "cache-size prints cache location and size" {
+    mkdir -p "$BATS_TEST_TMPDIR/pkg"
+    export _LAZYPAC_CACHE_DIR="$BATS_TEST_TMPDIR/pkg"
+    run bash "$LAZYPAC" cache-size
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Cache location"* ]]
+    [[ "$output" == *"Total size"* ]]
+    [[ "$output" == *"Cached files"* ]]
 }
 
 # ---------------------------------------------------------------------------

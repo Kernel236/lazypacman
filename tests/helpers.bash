@@ -33,6 +33,38 @@ esac
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/yay"
 
+    # Fake sudo — passes through to the next command in the test environment
+    cat > "$BATS_TEST_TMPDIR/bin/sudo" << 'EOF'
+#!/usr/bin/env bash
+exec "$@"
+EOF
+    chmod +x "$BATS_TEST_TMPDIR/bin/sudo"
+
+    # Fake pacman — handles cache commands
+    cat > "$BATS_TEST_TMPDIR/bin/pacman" << 'EOF'
+#!/usr/bin/env bash
+case "${1:-}" in
+    -Sc)  echo "pacman -Sc ${*:2}" ;;
+    -Scc) echo "pacman -Scc ${*:2}" ;;
+    -Sy)  echo "pacman -Sy" ;;
+    -Q)
+        INSTALLED=(git firefox curl)
+        if [[ -n "${2:-}" ]]; then
+            for p in "${INSTALLED[@]}"; do [[ "$p" == "$2" ]] && echo "$2 1.0.0" && exit 0; done; exit 1
+        else
+            for p in "${INSTALLED[@]}"; do echo "$p 1.0.0"; done
+        fi ;;
+esac
+EOF
+    chmod +x "$BATS_TEST_TMPDIR/bin/pacman"
+
+    # Fake paccache — handles cache-clean-old
+    cat > "$BATS_TEST_TMPDIR/bin/paccache" << 'EOF'
+#!/usr/bin/env bash
+echo "paccache $*"
+EOF
+    chmod +x "$BATS_TEST_TMPDIR/bin/paccache"
+
     # Fake less — cats the file so output is capturable in tests
     cat > "$BATS_TEST_TMPDIR/bin/less" << 'EOF'
 #!/usr/bin/env bash

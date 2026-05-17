@@ -19,19 +19,19 @@ load helpers
 @test "version prints version string" {
     run bash "$LAZYPAC" version
     [ "$status" -eq 0 ]
-    [ "$output" = "lazypac 1.1.1" ]
+    [ "$output" = "lazypac 1.2.0" ]
 }
 
 @test "--version prints version string" {
     run bash "$LAZYPAC" --version
     [ "$status" -eq 0 ]
-    [ "$output" = "lazypac 1.1.1" ]
+    [ "$output" = "lazypac 1.2.0" ]
 }
 
 @test "-v prints version string" {
     run bash "$LAZYPAC" -v
     [ "$status" -eq 0 ]
-    [ "$output" = "lazypac 1.1.1" ]
+    [ "$output" = "lazypac 1.2.0" ]
 }
 
 # ---------------------------------------------------------------------------

@@ -52,15 +52,15 @@ load helpers
     [ "$output" = "git: installed" ]
 }
 
-@test "check reports not installed for an unknown package" {
+@test "check reports not installed for an unknown package and exits 1" {
     run bash "$LAZYPAC" check nonexistent-pkg
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     [ "$output" = "nonexistent-pkg: not installed" ]
 }
 
-@test "check handles mixed results across multiple packages" {
+@test "check handles mixed results and exits 1 when any package is missing" {
     run bash "$LAZYPAC" check git nonexistent-pkg firefox
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     [[ "$output" == *"git: installed"* ]]
     [[ "$output" == *"nonexistent-pkg: not installed"* ]]
     [[ "$output" == *"firefox: installed"* ]]
