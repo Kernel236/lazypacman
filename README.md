@@ -22,13 +22,13 @@ Automatically detects your package manager at startup: `yay` first, then `paru`,
 **Daily maintenance workflow**
 
 <p align="center">
-  <img src="assets/demo_maintenance.svg" alt="lazypac maintenance demo">
+  <img src="assets/demo_maintenance.gif" alt="lazypac maintenance demo">
 </p>
 
 **Package search, inspect, and install**
 
 <p align="center">
-  <img src="assets/demo_install.svg" alt="lazypac install demo">
+  <img src="assets/demo_install.gif" alt="lazypac install demo">
 </p>
 
 ---
