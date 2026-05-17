@@ -223,6 +223,62 @@ case "$cmd" in
         echo "Total size     : $(du -sh "$_cache_dir" 2>/dev/null | cut -f1)"
         echo "Cached files   : $(ls "$_cache_dir" 2>/dev/null | wc -l)"
         ;;
+    check-updates)
+        if command -v checkupdates &>/dev/null; then
+            _cu_source="checkupdates"
+            _updates=$(checkupdates 2>/dev/null)
+        else
+            _cu_source="$PKG -Qu (local db — run 'lazypac update' first for fresh results)"
+            _updates=$("$PKG" -Qu 2>/dev/null)
+        fi
+
+        if [[ -z "$_updates" ]]; then
+            echo "All packages are up to date."
+            exit 0
+        fi
+
+        if [[ -t 1 ]]; then
+            _red=$(tput bold; tput setaf 1)
+            _reset=$(tput sgr0)
+        else
+            _red=""
+            _reset=""
+        fi
+
+        echo "Pending updates  (via $_cu_source)"
+        echo ""
+
+        _major_count=0
+        _other_count=0
+        _total=0
+
+        while IFS= read -r _line; do
+            [[ -z "$_line" ]] && continue
+            _pkg=$(awk '{print $1}' <<< "$_line")
+            _old=$(awk '{print $2}' <<< "$_line")
+            _new=$(awk '{print $4}' <<< "$_line")
+
+            _old_base=${_old#*:}; _old_base=${_old_base%-*}
+            _new_base=${_new#*:}; _new_base=${_new_base%-*}
+
+            _old_maj=$(cut -d. -f1 <<< "$_old_base")
+            _new_maj=$(cut -d. -f1 <<< "$_new_base")
+
+            if [[ "$_old_maj" =~ ^[0-9]+$ && "$_new_maj" =~ ^[0-9]+$ && "$_old_maj" -ne "$_new_maj" ]]; then
+                printf "  %s[!] %-30s %-20s ->  %s%s\n" \
+                    "$_red" "$_pkg" "$_old" "$_new" "$_reset"
+                _major_count=$(( _major_count + 1 ))
+            else
+                printf "      %-30s %-20s ->  %s\n" "$_pkg" "$_old" "$_new"
+                _other_count=$(( _other_count + 1 ))
+            fi
+            _total=$(( _total + 1 ))
+        done <<< "$_updates"
+
+        echo ""
+        printf "  %d update(s) available  |  %d major  |  %d other\n" \
+            "$_total" "$_major_count" "$_other_count"
+        ;;
     version|--version|-v)
         echo "lazypac $VERSION"
         ;;
@@ -236,6 +292,9 @@ case "$cmd" in
         printf "  %-22s %-34s %s\n" "update"             "Sync repositories"                   "-> $PKG_W -Sy"
         printf "  %-22s %-34s %s\n" "upgrade"            "Upgrade all packages"                "-> $PKG_W -Syu"
         printf "  %-22s %-34s %s\n" "safe-upgrade"       "Upgrade + log + pacnew check"        "-> $PKG_W -Syu + log"
+        echo ""
+        echo "  Updates"
+        printf "  %-22s %-34s %s\n" "check-updates"      "List available updates (no install)" "-> checkupdates / $PKG -Qu"
         echo ""
         echo "  Query"
         printf "  %-22s %-34s %s\n" "search <term>"      "Search for a package"                "-> $PKG -Ss <term>"
