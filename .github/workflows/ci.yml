@@ -71,7 +71,7 @@ jobs:
           output=$(namcap PKGBUILD 2>&1)
           echo "$output"
           if echo "$output" | grep -q "^lazypac E:"; then
-            echo "namcap reported errors — fix before publishing to AUR"
+            echo "namcap reported errors - fix before publishing to AUR"
             exit 1
           fi
           echo "OK: namcap found no errors"
@@ -95,4 +95,4 @@ jobs:
         run: sudo apt-get install -y --no-install-recommends bats
 
       - name: Run test suite
-        run: bats tests/test_misc.sh tests/test_packages.sh tests/test_query.sh tests/test_logs.sh
+        run: bats tests/test_misc.sh tests/test_packages.sh tests/test_query.sh tests/test_logs.sh tests/test_config.sh
