@@ -17,6 +17,7 @@ package() {
     cd "$srcdir/lazypacman-$pkgver"
     install -Dm755 lazypac "$pkgdir/usr/bin/lazypac"
     install -Dm755 lazypac-tui "$pkgdir/usr/bin/lazypac-tui"
+    install -Dm644 assets/lazypacman_tui_banner.sh "$pkgdir/usr/lib/lazypac/tui_banner.sh"
     install -Dm644 lib/help.sh     "$pkgdir/usr/lib/lazypac/help.sh"
     install -Dm644 lib/config.sh   "$pkgdir/usr/lib/lazypac/config.sh"
     install -Dm644 lib/packages.sh "$pkgdir/usr/lib/lazypac/packages.sh"
