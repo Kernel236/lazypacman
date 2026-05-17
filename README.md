@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner_lazypacman.png" alt="Lazy Pacman" width="900">
+  <img src="assets/banner_lazypacman.png" alt="Lazy Pacman" width="1000">
 </p>
 
 <p align="center">
@@ -13,20 +13,29 @@ A simple bash wrapper for common `pacman`/`yay`/`paru` commands. No databases, n
 
 Automatically detects your package manager at startup: `yay` first, then `paru`, then plain `pacman`. Write operations (`install`, `remove`, `upgrade`...) run with `sudo` automatically when falling back to pacman.
 
-*for those who don't want to memorise flags and their combinations*
+*For those who don't want to memorise flags and their combinations*
+
+---
+
+## Demo
+
+**Daily maintenance workflow**
+
+<p align="center">
+  <img src="assets/demo_maintenance.svg" alt="lazypac maintenance demo">
+</p>
+
+**Package search, inspect, and install**
+
+<p align="center">
+  <img src="assets/demo_install.svg" alt="lazypac install demo">
+</p>
 
 ---
 
 ## Install
 
-### Option 1 - Manual
-
-```bash
-sudo cp lazypac /usr/local/bin/
-sudo chmod +x /usr/local/bin/lazypac
-```
-
-### Option 2 - AUR
+### Option 1 - AUR
 
 ```bash
 yay -S lazypac
@@ -34,12 +43,21 @@ yay -S lazypac
 paru -S lazypac
 ```
 
-### Optional dependencies
+### Option 2 - Manual
 
-| Package | Required for |
-|---|---|
-| `yay` or `paru` | optional - falls back to plain `pacman` if neither is found |
-| `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew`), `paccache` (used by `cache-clean-old`), `checkupdates` (used by `check-updates` for fresh results) |
+```bash
+sudo cp lazypac /usr/local/bin/
+sudo chmod +x /usr/local/bin/lazypac
+sudo mkdir -p /usr/lib/lazypac
+sudo cp lib/*.sh /usr/lib/lazypac/
+```
+
+### Dependencies
+
+| Package | Type | Required for |
+|---|---|---|
+| `pacman-contrib` | required | `pactree` (`deps`), `paccache` (`cache-clean-old`), `checkupdates` (`check-updates`), `pacdiff` (suggested by `safe-upgrade` and `pacnew`) |
+| `yay` or `paru` | optional | AUR support - falls back to plain `pacman` if neither is found |
 
 ---
 
@@ -55,6 +73,16 @@ paru -S lazypac
 | `update` | Sync repositories | `yay -Sy` |
 | `upgrade` | Upgrade all packages | `yay -Syu` |
 | `safe-upgrade` | Upgrade + log + pacnew check | `yay -Syu` + snapshot |
+| `downgrade <pkg>` | Install a cached older version | `sudo pacman -U <file>` |
+
+### Upgrade control
+
+| Command | Description | Underlying call |
+|---|---|---|
+| `ignore <pkg...>` | Pin package(s) - skip on upgrades | `/etc/pacman.conf` IgnorePkg |
+| `unignore <pkg...>` | Unpin package(s) - allow upgrades again | `/etc/pacman.conf` IgnorePkg |
+
+> `downgrade` prompts whether to add the package to IgnorePkg after a successful install.
 
 ### Updates
 
@@ -62,13 +90,13 @@ paru -S lazypac
 |---|---|---|
 | `check-updates` | List available updates without installing | `checkupdates` or `yay -Qu` |
 
-> `check-updates` uses `checkupdates` (from `pacman-contrib`) when available for fresh results. Otherwise it reads the local sync database via `-Qu` — run `lazypac update` first to refresh it. Major version bumps are highlighted.
+> `check-updates` uses `checkupdates` (from `pacman-contrib`) for fresh results. If not found at runtime, it falls back to `$PKG -Qu` using the local sync database - run `lazypac update` first if the database may be stale. Major version bumps are highlighted.
 
 ### Query
 
 | Command | Description | Underlying call |
 |---|---|---|
-| `search <pkg>` | Search for a package | `yay -Ss <pkg>` |
+| `search <pkg>` | Search for a package in the repositories | `yay -Ss <pkg>` |
 | `info <pkg>` | Show package details | `yay -Si <pkg>` |
 | `list` | List installed (names only) | `yay -Qq` |
 | `installed` | List installed (names + versions) | `yay -Q` |
@@ -82,7 +110,7 @@ After an upgrade, pacman may leave `.pacnew` (new default config) or `.pacsave` 
 
 | Command | Description | Underlying call |
 |---|---|---|
-| `pacnew` | Find `.pacnew` and `.pacsave` files | `find /etc -name *.pacnew …` |
+| `pacnew` | Find `.pacnew` and `.pacsave` files | `find /etc -name *.pacnew ...` |
 
 ### Logs
 
@@ -92,7 +120,7 @@ After an upgrade, pacman may leave `.pacnew` (new default config) or `.pacsave` 
 |---|---|---|
 | `log` | List upgrade log files | `ls -lh ~/.local/share/lazypac/` |
 | `log <file>` | Read a log file | `less ~/.local/share/lazypac/<file>` |
-| `logclean` | Delete all upgrade logs | `find … -name *.log -delete` |
+| `logclean` | Delete all upgrade logs | `find ... -name *.log -delete` |
 
 ### Cleanup
 
@@ -122,10 +150,10 @@ lazypac check-updates          # see all pending updates with major bumps highli
 
 ```bash
 lazypac safe-upgrade
-lazypac log                          # list saved upgrade logs
+lazypac log                               # list saved upgrade logs
 lazypac log upgrade_20260516_120000.log   # read what actually changed
-lazypac remove-orphans               # drop deps that are no longer needed
-lazypac cache-clean                  # remove old cached package versions
+lazypac remove-orphans                    # drop deps that are no longer needed
+lazypac cache-clean                       # remove old cached package versions
 ```
 
 **Before installing something new: search, inspect, check disk impact**
@@ -147,16 +175,24 @@ lazypac pacnew                       # list any .pacnew / .pacsave in /etc
 **Skip a package you are not ready to upgrade yet:**
 
 ```bash
-lazypac safe-upgrade --ignore hyprland   # Hyprland decided to rewrite configs in Lua and you haven't migrated yet
+lazypac safe-upgrade --ignore hyprland   # upgrade everything except hyprland
+lazypac ignore hyprland                  # pin it in /etc/pacman.conf permanently
+lazypac unignore hyprland                # unpin it when ready
+```
+
+**Downgrade a package from the local cache:**
+
+```bash
+lazypac downgrade firefox            # choose from cached versions, then optionally pin it
 ```
 
 **Check and reclaim cache space:**
 
 ```bash
-lazypac cache-size                       # see how much /var/cache/pacman/pkg/ weighs
-lazypac cache-clean-old                  # remove cached versions of packages you uninstalled
-lazypac cache-clean                      # keep only the latest version of each installed package
-lazypac cache-clean-all                  # nuclear option - wipe the entire cache
+lazypac cache-size                   # see how much /var/cache/pacman/pkg/ weighs
+lazypac cache-clean-old              # remove cached versions of packages you uninstalled
+lazypac cache-clean                  # keep only the latest version of each installed package
+lazypac cache-clean-all              # nuclear option - wipe the entire cache
 ```
 
 ---
@@ -175,16 +211,16 @@ All extra arguments after the command are forwarded verbatim to the underlying t
 
 ```bash
 lazypac install firefox chromium vlc --noconfirm
-# → yay -S firefox chromium vlc --noconfirm
+# -> yay -S firefox chromium vlc --noconfirm
 
 lazypac remove gimp inkscape
-# → yay -Rs gimp inkscape
+# -> yay -Rs gimp inkscape
 
 lazypac upgrade --devel
-# → yay -Syu --devel
+# -> yay -Syu --devel
 
 lazypac safe-upgrade --devel
-# → yay -Syu --devel  (with before/after version logging)
+# -> yay -Syu --devel  (with before/after version logging)
 ```
 
 ---
@@ -200,4 +236,19 @@ AUR helper: yay
   linux                                    6.9.1.arch1-1  ->  6.9.3.arch1-1
   python                                   3.12.3-1  ->  3.12.4-1
   some-aur-package                         (new install)  1.2.3-1
+```
+
+---
+
+## Project structure
+
+```
+lazypac              # main entry point - detects pkg manager, sources modules, dispatches commands
+lib/
+  help.sh            # cmd_help()
+  packages.sh        # install, remove, purge, update, upgrade, downgrade, remove-orphans
+  cache.sh           # cache-clean, cache-clean-all, cache-clean-old, cache-size
+  query.sh           # search, info, list, installed, check, deps, orphans, check-updates
+  logs.sh            # safe-upgrade, log, logclean, pacnew
+  config.sh          # ignore, unignore + IgnorePkg helpers
 ```
