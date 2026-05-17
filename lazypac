@@ -63,6 +63,7 @@ main() {
         safe-upgrade)    cmd_safe_upgrade "$@" ;;
         ignore)          cmd_ignore "$@" ;;
         unignore)        cmd_unignore "$@" ;;
+        ignored)         cmd_ignored "$@" ;;
         search)          cmd_search "$@" ;;
         info)            cmd_info "$@" ;;
         list)            cmd_list "$@" ;;
