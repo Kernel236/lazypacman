@@ -1,8 +1,8 @@
 # Contributing to Lazy Pacman
 
-Every kind of contribution is welcome — bug reports, new command ideas, documentation fixes, corrections to the man page, a better example in the README. No contribution is too small and none requires justification.
+Every kind of contribution is welcome: bug reports, new command ideas, documentation fixes, corrections to the man page, a better example in the README. No contribution is too small and none requires justification.
 
-If you are new to AUR packaging, bash scripting, or open source in general, this is a good project to start with. Feel free to ask questions directly in an issue.
+If you are new to AUR packaging, bash scripting, or open source in general, this is a good project to start with.
 
 ## Philosophy
 

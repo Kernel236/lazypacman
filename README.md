@@ -19,14 +19,14 @@ Automatically detects your package manager at startup: `yay` first, then `paru`,
 
 ## Install
 
-### Option 1 — Manual
+### Option 1 - Manual
 
 ```bash
 sudo cp lazypac /usr/local/bin/
 sudo chmod +x /usr/local/bin/lazypac
 ```
 
-### Option 2 — AUR
+### Option 2 - AUR
 
 ```bash
 yay -S lazypac
@@ -38,8 +38,8 @@ paru -S lazypac
 
 | Package | Required for |
 |---|---|
-| `yay` or `paru` | optional — falls back to plain `pacman` if neither is found |
-| `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew` when files are found) |
+| `yay` or `paru` | optional - falls back to plain `pacman` if neither is found |
+| `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew`), `paccache` (used by `cache-clean-old`) |
 
 ---
 
@@ -64,7 +64,7 @@ paru -S lazypac
 | `info <pkg>` | Show package details | `yay -Si <pkg>` |
 | `list` | List installed (names only) | `yay -Qq` |
 | `installed` | List installed (names + versions) | `yay -Q` |
-| `check <pkg>` | Check if a package is installed | `yay -Q <pkg>` |
+| `check <pkg...>` | Check if a package is installed | `yay -Q <pkg>` |
 | `deps <pkg>` | Show package dependency tree | `pactree <pkg>` |
 | `orphans` | List orphan packages | `yay -Qdt` |
 
@@ -91,8 +91,12 @@ After an upgrade, pacman may leave `.pacnew` (new default config) or `.pacsave` 
 | Command | Description | Underlying call |
 |---|---|---|
 | `remove-orphans` | Remove all orphan packages | `yay -Rns $(yay -Qdtq)` |
-| `clean` | Remove old cached packages | `yay -Sc` |
-| `clean-all` | Remove all cached packages | `yay -Scc` |
+| `cache-size` | Show package cache size and file count | `du -sh /var/cache/pacman/pkg/` |
+| `cache-clean` | Keep only the latest version per package | `sudo pacman -Sc` |
+| `cache-clean-old` | Remove cache of uninstalled packages | `sudo paccache -ruk0` |
+| `cache-clean-all` | Remove the entire package cache | `sudo pacman -Scc` |
+
+> `cache-clean-old` requires `paccache` from `pacman-contrib`. To keep a specific number of versions instead, use `paccache -rk 2` directly.
 
 > The AUR helper shown (`yay`) reflects whichever is detected on your system at runtime. If `paru` is installed instead, all commands use `paru`. If neither is found, commands fall back to plain `pacman`.
 
@@ -107,7 +111,7 @@ lazypac safe-upgrade
 lazypac log                          # list saved upgrade logs
 lazypac log upgrade_20260516_120000.log   # read what actually changed
 lazypac remove-orphans               # drop deps that are no longer needed
-lazypac clean                        # remove old cached package versions
+lazypac cache-clean                  # remove old cached package versions
 ```
 
 **Before installing something new: search, inspect, check disk impact**
@@ -128,10 +132,17 @@ lazypac pacnew                       # list any .pacnew / .pacsave in /etc
 
 **Skip a package you are not ready to upgrade yet:**
 
-Extra flags and arguments are passed through directly to the underlying tool.
-
 ```bash
 lazypac safe-upgrade --ignore hyprland   # Hyprland decided to rewrite configs in Lua and you haven't migrated yet
+```
+
+**Check and reclaim cache space:**
+
+```bash
+lazypac cache-size                       # see how much /var/cache/pacman/pkg/ weighs
+lazypac cache-clean-old                  # remove cached versions of packages you uninstalled
+lazypac cache-clean                      # keep only the latest version of each installed package
+lazypac cache-clean-all                  # nuclear option - wipe the entire cache
 ```
 
 ---
@@ -139,7 +150,7 @@ lazypac safe-upgrade --ignore hyprland   # Hyprland decided to rewrite configs i
 ## Non-goals
 
 - **Not a pacman replacement.** lazypac is a thin alias layer; anything outside its command set goes straight to `yay`, `paru`, or `pacman` directly.
-- **No lock or recovery management.** Database locks, partial upgrades, and rollbacks are out of scope — handle them with pacman as usual.
+- **No lock or recovery management.** Database locks, partial upgrades, and rollbacks are out of scope - handle them with pacman as usual.
 - **No AUR without an AUR helper.** With plain pacman, `install` and `search` only reach the official repositories.
 
 ---
@@ -167,14 +178,12 @@ lazypac safe-upgrade --devel
 ## safe-upgrade log format
 
 ```
-Lazy Pacman — upgrade log
+Lazy Pacman - upgrade log
 Date: Fri May 16 12:00:00 UTC 2026
 AUR helper: yay
 
-Updated packages:
-
-  firefox                                  130.0-1  →  131.0-1
-  linux                                    6.9.1.arch1-1  →  6.9.3.arch1-1
-  python                                   3.12.3-1  →  3.12.4-1
+  firefox                                  130.0-1  ->  131.0-1
+  linux                                    6.9.1.arch1-1  ->  6.9.3.arch1-1
+  python                                   3.12.3-1  ->  3.12.4-1
   some-aur-package                         (new install)  1.2.3-1
 ```

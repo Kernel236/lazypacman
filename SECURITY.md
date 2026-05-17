@@ -7,12 +7,15 @@ Lazy Pacman is a bash wrapper. It does not handle credentials, tokens, or networ
 ## Known risks and mitigations
 
 **Temp files in `/tmp` (`safe-upgrade`)**
+
 Temp files are created with `mktemp`, which generates a random name atomically. This prevents predictable-path symlink attacks. Files are removed via `trap ... EXIT` even if the command is interrupted.
 
-**`remove-orphans` argument handling**
-The orphan list is collected into a bash array with `mapfile` and expanded as `"${orphan_list[@]}"`. Each package name is a separate quoted word. No shell splitting or glob expansion on the list.
+**Path traversal in `log <file>` (`log` command)**
+
+`lazypac log <file>` opens the given filename from the log directory with `less`. Without a guard, a name like `../../../etc/shadow` would escape the log directory and open an arbitrary file. The command rejects any filename containing `/` before constructing the path, so only bare filenames are accepted. The log directory itself is fixed at `$XDG_DATA_HOME/lazypac/`.
 
 **Log directory**
+
 `$XDG_DATA_HOME/lazypac/` is created with default user permissions (700). Only package names and versions are written there. No credentials or tokens.
 
 ## What is out of scope
