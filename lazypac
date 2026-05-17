@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-VERSION="1.1.1"
+VERSION="1.2.0"
 
 # Detection order: yay > paru > pacman
 if command -v yay &>/dev/null; then
@@ -51,10 +51,12 @@ case "$cmd" in
         pkg_write -Rns "${@:2}"
         ;;
     update)
-        echo "WARNING: syncing repos without upgrading (-Sy) can leave your system in a partial upgrade state."
-        echo "         This is unsafe on Arch. Use 'lazypac upgrade' to sync and upgrade together."
+        echo "WARNING: syncing repos without upgrading (-Sy) can leave the system in a partial upgrade state."
+        echo "         This is unsafe on Arch Linux. Use 'lazypac upgrade' to sync and upgrade together."
         echo ""
-        pkg_write -Sy
+        read -r -p "Proceed anyway? [y/N] " _confirm
+        [[ "$_confirm" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
+        pkg_write -Sy "${@:2}"
         ;;
     upgrade)
         pkg_write -Syu "${@:2}"
@@ -68,7 +70,7 @@ case "$cmd" in
         trap 'rm -f "$before_snap" "$after_snap"' EXIT
 
         echo "==> Snapshotting installed packages..."
-        "$PKG" -Q > "$before_snap"
+        "$PKG" -Q > "$before_snap" || { echo "==> Failed to snapshot packages. Aborting."; exit 1; }
 
         echo "==> Running upgrade..."
         pkg_write -Syu "${@:2}" || { echo "==> Upgrade failed. No log written."; exit 1; }
@@ -79,7 +81,7 @@ case "$cmd" in
 
         echo "==> Generating upgrade log..."
         {
-            echo "Lazy Pacman — upgrade log"
+            echo "Lazy Pacman - upgrade log"
             echo "Date: $(date)"
             echo "AUR helper: $PKG"
             echo ""
@@ -105,7 +107,7 @@ case "$cmd" in
         pacnew_found=$(find /etc \( -name "*.pacnew" -o -name "*.pacsave" \) 2>/dev/null)
         if [[ -n "$pacnew_found" ]]; then
             echo ""
-            echo "==> .pacnew/.pacsave files found — review them with:"
+            echo "==> .pacnew/.pacsave files found - review them with:"
             echo "      sudo pacdiff"
             echo ""
             echo "$pacnew_found"
@@ -141,7 +143,7 @@ case "$cmd" in
     deps)
         [[ -z "${2:-}" ]] && { echo "Usage: lazypac deps <package>"; exit 1; }
         if ! command -v pactree &>/dev/null; then
-            echo "pactree not found — install pacman-contrib"
+            echo "pactree not found - install pacman-contrib"
             exit 1
         fi
         pactree "${@:2}"
@@ -198,17 +200,34 @@ case "$cmd" in
             echo "Done."
         fi
         ;;
-    clean)
-        pkg_write -Sc "${@:2}"
+    cache-clean)
+        sudo pacman -Sc "${@:2}"
         ;;
-    clean-all)
-        pkg_write -Scc "${@:2}"
+    cache-clean-all)
+        sudo pacman -Scc "${@:2}"
+        ;;
+    cache-clean-old)
+        if ! command -v paccache &>/dev/null; then
+            echo "paccache not found - install pacman-contrib"
+            exit 1
+        fi
+        sudo paccache -ruk0 "${@:2}"
+        ;;
+    cache-size)
+        _cache_dir="${_LAZYPAC_CACHE_DIR:-/var/cache/pacman/pkg/}"
+        if [[ ! -r "$_cache_dir" ]]; then
+            echo "Cannot read $_cache_dir - try running with sudo"
+            exit 1
+        fi
+        echo "Cache location : $_cache_dir"
+        echo "Total size     : $(du -sh "$_cache_dir" 2>/dev/null | cut -f1)"
+        echo "Cached files   : $(ls "$_cache_dir" 2>/dev/null | wc -l)"
         ;;
     version|--version|-v)
         echo "lazypac $VERSION"
         ;;
     help|--help|-h)
-        echo "Lazy Pacman $VERSION — command reference"
+        echo "Lazy Pacman $VERSION - command reference"
         echo ""
         echo "  Package management"
         printf "  %-22s %-34s %s\n" "install <pkg...>"   "Install one or more packages"       "-> $PKG_W -S <pkg...>"
@@ -237,12 +256,15 @@ case "$cmd" in
         echo ""
         echo "  Cleanup"
         printf "  %-22s %-34s %s\n" "remove-orphans"     "Remove all orphan packages"          "-> $PKG_W -Rns \$($PKG -Qdtq)"
-        printf "  %-22s %-34s %s\n" "clean"              "Remove old cached packages"          "-> $PKG_W -Sc"
-        printf "  %-22s %-34s %s\n" "clean-all"          "Remove all cached packages"          "-> $PKG_W -Scc"
+        printf "  %-22s %-34s %s\n" "cache-size"         "Show package cache size"             "-> du -sh /var/cache/pacman/pkg/"
+        printf "  %-22s %-34s %s\n" "cache-clean"        "Keep only latest version per pkg"    "-> sudo pacman -Sc"
+        printf "  %-22s %-34s %s\n" "cache-clean-old"    "Remove cache of uninstalled pkgs"    "-> sudo paccache -ruk0"
+        printf "  %-22s %-34s %s\n" "cache-clean-all"    "Remove the entire package cache"     "-> sudo pacman -Scc"
         echo ""
         echo "Tip: multiple packages and extra flags are passed through directly."
         echo "     lazypac install firefox chromium --noconfirm"
         echo "     lazypac upgrade --devel"
+        echo "     lazypac safe-upgrade --ignore hyprland"
         ;;
     "")
         echo "Unknown command. Run 'lazypac help'."
