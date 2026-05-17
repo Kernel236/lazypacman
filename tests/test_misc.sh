@@ -19,19 +19,19 @@ load helpers
 @test "version prints version string" {
     run bash "$LAZYPAC" version
     [ "$status" -eq 0 ]
-    [ "$output" = "lazypac 1.2.0" ]
+    [ "$output" = "lazypac 1.3.0" ]
 }
 
 @test "--version prints version string" {
     run bash "$LAZYPAC" --version
     [ "$status" -eq 0 ]
-    [ "$output" = "lazypac 1.2.0" ]
+    [ "$output" = "lazypac 1.3.0" ]
 }
 
 @test "-v prints version string" {
     run bash "$LAZYPAC" -v
     [ "$status" -eq 0 ]
-    [ "$output" = "lazypac 1.2.0" ]
+    [ "$output" = "lazypac 1.3.0" ]
 }
 
 # ---------------------------------------------------------------------------
@@ -60,6 +60,9 @@ load helpers
     [ "$status" -eq 0 ]
     [[ "$output" == *"Package management"* ]]
     [[ "$output" == *"safe-upgrade"* ]]
+    [[ "$output" == *"downgrade"* ]]
+    [[ "$output" == *"ignore"* ]]
+    [[ "$output" == *"check-updates"* ]]
     [[ "$output" == *"Pacnew"* ]]
     [[ "$output" == *"Logs"* ]]
 }

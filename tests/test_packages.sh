@@ -104,6 +104,68 @@ load helpers
 }
 
 # ---------------------------------------------------------------------------
+# downgrade
+# ---------------------------------------------------------------------------
+
+@test "downgrade without argument exits 1 with usage" {
+    run bash "$LAZYPAC" downgrade
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"Usage: lazypac downgrade"* ]]
+}
+
+@test "downgrade with multiple packages exits 1" {
+    run bash "$LAZYPAC" downgrade firefox chromium
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"Only one package"* ]]
+}
+
+@test "downgrade exits 1 when no cached versions found" {
+    export _LAZYPAC_CACHE_DIR="$BATS_TEST_TMPDIR/pkg"
+    mkdir -p "$BATS_TEST_TMPDIR/pkg"
+    run bash "$LAZYPAC" downgrade nosuchpkg
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"No cached versions"* ]]
+}
+
+@test "downgrade lists cached versions and installs selected" {
+    export _LAZYPAC_CACHE_DIR="$BATS_TEST_TMPDIR/pkg"
+    mkdir -p "$BATS_TEST_TMPDIR/pkg"
+    touch "$BATS_TEST_TMPDIR/pkg/firefox-129.0-1-x86_64.pkg.tar.zst"
+    touch "$BATS_TEST_TMPDIR/pkg/firefox-128.0-1-x86_64.pkg.tar.zst"
+    run bash -c "echo '2' | bash '$LAZYPAC' downgrade firefox"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"pacman -U"* ]]
+    [[ "$output" == *"firefox"* ]]
+}
+
+@test "downgrade prompts for IgnorePkg and adds package when confirmed" {
+    export _LAZYPAC_CACHE_DIR="$BATS_TEST_TMPDIR/pkg"
+    mkdir -p "$BATS_TEST_TMPDIR/pkg"
+    touch "$BATS_TEST_TMPDIR/pkg/firefox-128.0-1-x86_64.pkg.tar.zst"
+    run bash -c "printf '1\ny\n' | bash '$LAZYPAC' downgrade firefox"
+    [ "$status" -eq 0 ]
+    grep -q "^IgnorePkg = firefox" "$_PACMAN_CONF"
+}
+
+@test "downgrade skips IgnorePkg when not confirmed" {
+    export _LAZYPAC_CACHE_DIR="$BATS_TEST_TMPDIR/pkg"
+    mkdir -p "$BATS_TEST_TMPDIR/pkg"
+    touch "$BATS_TEST_TMPDIR/pkg/firefox-128.0-1-x86_64.pkg.tar.zst"
+    run bash -c "printf '1\nn\n' | bash '$LAZYPAC' downgrade firefox"
+    [ "$status" -eq 0 ]
+    ! grep -q "^IgnorePkg" "$_PACMAN_CONF"
+}
+
+@test "downgrade aborts on invalid selection" {
+    export _LAZYPAC_CACHE_DIR="$BATS_TEST_TMPDIR/pkg"
+    mkdir -p "$BATS_TEST_TMPDIR/pkg"
+    touch "$BATS_TEST_TMPDIR/pkg/firefox-129.0-1-x86_64.pkg.tar.zst"
+    run bash -c "echo '99' | bash '$LAZYPAC' downgrade firefox"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"Aborted"* ]]
+}
+
+# ---------------------------------------------------------------------------
 # remove-orphans
 # ---------------------------------------------------------------------------
 

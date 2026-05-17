@@ -1,11 +1,18 @@
 LAZYPAC="$(dirname "$BATS_TEST_FILENAME")/../lazypac"
+export _LAZYPAC_LIB="$(dirname "$BATS_TEST_FILENAME")/../lib"
 
 setup() {
     export XDG_DATA_HOME="$BATS_TEST_TMPDIR/data"
     mkdir -p "$BATS_TEST_TMPDIR/bin" "$XDG_DATA_HOME/lazypac"
     export PATH="$BATS_TEST_TMPDIR/bin:$PATH"
 
-    # Fake AUR helper — simulates yay behaviour without touching the system
+    export _PACMAN_CONF="$BATS_TEST_TMPDIR/pacman.conf"
+    cat > "$_PACMAN_CONF" << 'EOF'
+[options]
+HoldPkg = pacman glibc
+EOF
+
+    # Fake AUR helper - simulates yay behaviour without touching the system
     cat > "$BATS_TEST_TMPDIR/bin/yay" << 'EOF'
 #!/usr/bin/env bash
 INSTALLED=(git firefox curl)
@@ -37,19 +44,20 @@ esac
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/yay"
 
-    # Fake sudo — passes through to the next command in the test environment
+    # Fake sudo - passes through to the next command in the test environment
     cat > "$BATS_TEST_TMPDIR/bin/sudo" << 'EOF'
 #!/usr/bin/env bash
 exec "$@"
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/sudo"
 
-    # Fake pacman — handles cache commands
+    # Fake pacman - handles cache commands
     cat > "$BATS_TEST_TMPDIR/bin/pacman" << 'EOF'
 #!/usr/bin/env bash
 case "${1:-}" in
     -Sc)  echo "pacman -Sc ${*:2}" ;;
     -Scc) echo "pacman -Scc ${*:2}" ;;
+    -U)   echo "pacman -U ${*:2}" ;;
     -Sy)  echo "pacman -Sy" ;;
     -Q)
         INSTALLED=(git firefox curl)
@@ -62,21 +70,21 @@ esac
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/pacman"
 
-    # Fake paccache — handles cache-clean-old
+    # Fake paccache - handles cache-clean-old
     cat > "$BATS_TEST_TMPDIR/bin/paccache" << 'EOF'
 #!/usr/bin/env bash
 echo "paccache $*"
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/paccache"
 
-    # Fake less — cats the file so output is capturable in tests
+    # Fake less - cats the file so output is capturable in tests
     cat > "$BATS_TEST_TMPDIR/bin/less" << 'EOF'
 #!/usr/bin/env bash
 cat "$1"
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/less"
 
-    # Fake checkupdates (pacman-contrib) — returns FAKE_UPDATES content
+    # Fake checkupdates (pacman-contrib) - returns FAKE_UPDATES content
     cat > "$BATS_TEST_TMPDIR/bin/checkupdates" << 'EOF'
 #!/usr/bin/env bash
 if [[ -n "${FAKE_UPDATES:-}" ]]; then
