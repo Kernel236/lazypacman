@@ -27,9 +27,18 @@ Open a [GitHub issue](https://github.com/Kernel236/lazypacman/issues) and includ
 
 Open an issue describing the new command, what it maps to underneath, and a real use case. If you are not sure whether it fits, open the issue anyway — worst case we figure out together why it does not fit, and that discussion might lead somewhere useful.
 
+## Branch model
+
+| Branch | Purpose |
+|---|---|
+| `dev` | Default development branch — all PRs target this |
+| `master` | Release branch — only receives merges from `dev`; each merge triggers an AUR release |
+
+Work always starts from `dev`. `master` reflects what is live on the AUR.
+
 ## Submitting a pull request
 
-1. Fork the repo and create a branch from `main`.
+1. Fork the repo and create a branch from `dev`.
 2. Make your changes to `lazypac` and, if the command is new or changed, update `lazypac.1` and `README.md` to match.
 3. Run ShellCheck locally before pushing:
    ```bash
