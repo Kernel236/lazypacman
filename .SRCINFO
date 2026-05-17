@@ -10,6 +10,6 @@ pkgbase = lazypac
 	optdepends = paru: AUR helper
 	optdepends = pacman-contrib: provides pacdiff, suggested after safe-upgrade
 	source = lazypac-1.2.0.tar.gz::https://github.com/Kernel236/lazypacman/archive/v1.2.0.tar.gz
-	sha256sums = SKIP
+	sha256sums = 054fc005d5ad9a3969baa1a2ac7295d9050431211ff86a6595dc195e0c7d9bf9
 
 pkgname = lazypac
