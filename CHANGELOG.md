@@ -6,6 +6,13 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- `check-updates`: list all pending updates with old→new versions, major version bumps highlighted in bold red, and a summary count line. Uses `checkupdates` (pacman-contrib) when available; falls back to `$PKG -Qu` against the local sync database.
+
+---
+
 ## [1.2.0] - 2026-05-17
 
 ### Added
