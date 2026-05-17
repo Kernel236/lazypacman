@@ -202,6 +202,44 @@ lazypac safe-upgrade --devel --noconfirm
 .fi
 .RE
 
+.SS Updates
+
+.TP
+.B check-updates
+List all packages that have newer versions available in the repositories,
+without downloading or installing anything.
+.PP
+For each package the current and available version are shown side by side
+.RI ( old " -> " new ).
+Packages whose first version segment changes (e.g. 1.x to 2.x) are
+prefixed with
+.B [!]
+and printed in bold red when the output is a terminal, indicating a major
+version jump that may require manual attention.
+.PP
+A summary line at the end reports the total number of pending updates and
+how many are classified as major.
+.PP
+When
+.BR checkupdates (8)
+.RI ( pacman-contrib )
+is present it is used to fetch up-to-date results safely.
+Otherwise
+.B lazypac
+falls back to
+.B $AUR_HELPER -Qu
+using the local sync database; run
+.B lazypac update
+first if the database may be stale.
+Colors are suppressed automatically when stdout is not a terminal.
+.IP
+.I Example - see what is pending before a full upgrade:
+.RS
+.nf
+lazypac check-updates
+.fi
+.RE
+
 .SS Query
 
 .TP

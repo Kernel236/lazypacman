@@ -39,7 +39,7 @@ paru -S lazypac
 | Package | Required for |
 |---|---|
 | `yay` or `paru` | optional - falls back to plain `pacman` if neither is found |
-| `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew`), `paccache` (used by `cache-clean-old`) |
+| `pacman-contrib` | `sudo pacdiff` (suggested by `safe-upgrade` and `pacnew`), `paccache` (used by `cache-clean-old`), `checkupdates` (used by `check-updates` for fresh results) |
 
 ---
 
@@ -55,6 +55,14 @@ paru -S lazypac
 | `update` | Sync repositories | `yay -Sy` |
 | `upgrade` | Upgrade all packages | `yay -Syu` |
 | `safe-upgrade` | Upgrade + log + pacnew check | `yay -Syu` + snapshot |
+
+### Updates
+
+| Command | Description | Underlying call |
+|---|---|---|
+| `check-updates` | List available updates without installing | `checkupdates` or `yay -Qu` |
+
+> `check-updates` uses `checkupdates` (from `pacman-contrib`) when available for fresh results. Otherwise it reads the local sync database via `-Qu` — run `lazypac update` first to refresh it. Major version bumps are highlighted.
 
 ### Query
 
@@ -103,6 +111,12 @@ After an upgrade, pacman may leave `.pacnew` (new default config) or `.pacsave` 
 ---
 
 ## Daily usage examples
+
+**Check what would be upgraded before committing to it:**
+
+```bash
+lazypac check-updates          # see all pending updates with major bumps highlighted
+```
 
 **Weekly maintenance: upgrade, check what changed, then clean the cache**
 
