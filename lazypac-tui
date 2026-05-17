@@ -164,7 +164,7 @@ run_cmd() {
     lazypac "$@" || true
     tput cnorm 2>/dev/null
     stty echo 2>/dev/null
-    printf "\n  \033[90mPress ENTER to continue...\033[0m"
+    printf "\n  \033[1;33mPress ENTER to continue...\033[0m"
     read -r
     printf "\n"
 }
@@ -174,7 +174,16 @@ run_cmd() {
 # ---------------------------------------------------------------------------
 
 menu_packages() {
-    local labels=("install" "remove" "purge" "update" "upgrade" "safe-upgrade" "downgrade" "ignore" "unignore" "ignored")
+    local labels=("install       install packages"
+                  "remove        remove + orphan deps"
+                  "purge         remove + config files"
+                  "update        sync repositories"
+                  "upgrade       upgrade all packages"
+                  "safe-upgrade  upgrade + log + pacnew check"
+                  "downgrade     install older cached version"
+                  "ignore        add to IgnorePkg"
+                  "unignore      remove from IgnorePkg"
+                  "ignored       list pinned packages")
     local values=("install" "remove" "purge" "update" "upgrade" "safe-upgrade" "downgrade" "ignore" "unignore" "ignored")
     local choice
 
@@ -198,7 +207,14 @@ menu_packages() {
 }
 
 menu_query() {
-    local labels=("search" "info" "list" "installed" "check" "deps" "orphans" "check-updates")
+    local labels=("search          search in repos"
+                  "info            show package details"
+                  "list            list installed (names)"
+                  "installed       list installed (name + version)"
+                  "check           check if installed"
+                  "deps            show dependency tree"
+                  "orphans         list orphan packages"
+                  "check-updates   list pending updates")
     local values=("search" "info" "list" "installed" "check" "deps" "orphans" "check-updates")
     local choice
 
@@ -222,7 +238,11 @@ menu_query() {
 }
 
 menu_maintenance() {
-    local labels=("remove-orphans" "cache-size" "cache-clean" "cache-clean-old" "cache-clean-all")
+    local labels=("remove-orphans    remove all orphan packages"
+                  "cache-size        show cache disk usage"
+                  "cache-clean       keep latest version only"
+                  "cache-clean-old   remove uninstalled cache"
+                  "cache-clean-all   wipe entire cache")
     local values=("remove-orphans" "cache-size" "cache-clean" "cache-clean-old" "cache-clean-all")
     local choice
 
@@ -234,7 +254,10 @@ menu_maintenance() {
 }
 
 menu_logs() {
-    local labels=("log" "log <file>" "logclean" "pacnew")
+    local labels=("log           list upgrade logs"
+                  "log <file>    open a log with less"
+                  "logclean      delete all logs"
+                  "pacnew        find .pacnew / .pacsave")
     local values=("log" "log-open" "logclean" "pacnew")
     local choice
 
@@ -271,7 +294,13 @@ main_menu() {
     local choice
 
     while true; do
-        if ! _pick "lazypac-tui  v$VERSION" labels values choice; then break; fi
+        if ! _pick "lazypac-tui  v$VERSION" labels values choice; then
+            printf "  \033[1;33mexit lazypac-tui?\033[0m \033[2m[y/N]\033[0m "
+            local confirm
+            read -r confirm
+            [[ "${confirm,,}" == "y" ]] && break
+            continue
+        fi
 
         case "$choice" in
             packages)    menu_packages ;;
