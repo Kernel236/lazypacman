@@ -320,4 +320,4 @@ check_deps
 tput clear
 show_banner
 main_menu
-printf "\n\n\n  \033[90mlazypac-tui — bye.\033[0m\n\n"
+printf "\n\n\n  \033[1;33mlazypac-tui  bye.\033[0m\n\n"
