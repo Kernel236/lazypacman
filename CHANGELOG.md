@@ -8,8 +8,27 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.3.0] - 2026-05-17
+
 ### Added
-- `check-updates`: list all pending updates with old→new versions, major version bumps highlighted in bold red, and a summary count line. Uses `checkupdates` (pacman-contrib) when available; falls back to `$PKG -Qu` against the local sync database.
+- `check-updates`: list all pending updates with old->new versions, major version bumps highlighted in bold red, and a summary count line. Uses `checkupdates` from `pacman-contrib`; falls back to `$PKG -Qu` against the local sync database if not found at runtime.
+- `downgrade <pkg>`: list cached versions of a package from `/var/cache/pacman/pkg/`, prompt for selection, and install the chosen version via `sudo pacman -U`. After a successful install, prompts whether to add the package to IgnorePkg. Only one package at a time.
+- `ignore <pkg...>`: add one or more packages to `IgnorePkg` in `/etc/pacman.conf` to prevent them from being upgraded. Creates the entry if absent.
+- `unignore <pkg...>`: remove one or more packages from `IgnorePkg` in `/etc/pacman.conf` to allow upgrades again.
+
+### Changed
+- Script fully modularized into `lib/`: `packages.sh`, `cache.sh`, `query.sh`, `logs.sh`, `config.sh`, `help.sh`. `lazypac` is now a thin dispatcher that sources these modules and routes commands.
+- `pacman-contrib` promoted from optional to required dependency; installs automatically with the package.
+
+### Fixed
+- `ignore` and `unignore` previously silently dropped all arguments after the first; both now iterate over all provided package names.
+- `downgrade` with multiple arguments now exits with a clear error instead of silently ignoring extras.
+- `ignore`/`unignore`: `sudo sed -i` failure (read-only filesystem, permission error) now reported explicitly instead of printing false success.
+- `check-updates`: `checkupdates` exit code 1 (tool error) is now distinguished from exit code 2 (no updates); real errors are reported and exit 1 instead of printing "All packages are up to date."
+- `orphans` and `remove-orphans`: removed `2>/dev/null` suppression so real errors from the package manager (db lock, corruption) are visible to the user.
+- `safe-upgrade`: temp snapshot files in `/tmp` were not cleaned up on normal completion due to local variable scoping with `trap EXIT`; explicit cleanup added at end of function.
 
 ---
 

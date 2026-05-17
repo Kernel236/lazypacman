@@ -25,24 +25,24 @@ Open a [GitHub issue](https://github.com/Kernel236/lazypacman/issues) and includ
 
 ## Suggesting a command
 
-Open an issue describing the new command, what it maps to underneath, and a real use case. If you are not sure whether it fits, open the issue anyway — worst case we figure out together why it does not fit, and that discussion might lead somewhere useful.
+Open an issue describing the new command, what it maps to underneath, and a real use case. If you are not sure whether it fits, open the issue anyway - worst case we figure out together why it does not fit, and that discussion might lead somewhere useful.
 
 ## Branch model
 
 | Branch | Purpose |
 |---|---|
-| `dev` | Default development branch — all PRs target this |
-| `master` | Release branch — only receives merges from `dev`; each merge triggers an AUR release |
+| `dev` | Default development branch - all PRs target this |
+| `master` | Release branch - only receives merges from `dev`; each merge triggers an AUR release |
 
 Work always starts from `dev`. `master` reflects what is live on the AUR.
 
 ## Submitting a pull request
 
 1. Fork the repo and create a branch from `dev`.
-2. Make your changes to `lazypac` and, if the command is new or changed, update `lazypac.1` and `README.md` to match.
+2. Make your changes in the appropriate `lib/` module (`packages.sh`, `cache.sh`, `query.sh`, `logs.sh`, `config.sh`). Add the dispatch entry in `lazypac`'s `main()` case. If the command is new or changed, update `lazypac.1` and `README.md` to match.
 3. Run ShellCheck locally before pushing:
    ```bash
-   shellcheck lazypac
+   shellcheck lazypac lib/*.sh
    ```
 4. If you changed `PKGBUILD`, regenerate `.SRCINFO`:
    ```bash
@@ -50,15 +50,15 @@ Work always starts from `dev`. `master` reflects what is live on the AUR.
    ```
 5. Open the pull request. CI will run ShellCheck, the man page check, and namcap automatically.
 
-Do not worry if something is not perfect — open the PR and we can iterate together.
+Do not worry if something is not perfect - open the PR and we can iterate together.
 
 ## Style guide
 
 - Indentation: 4 spaces (no tabs)
 - Quote all variable expansions: `"$var"`, `"${var:-}"`
-- No `set -e` — see the comment at the top of the script for why
+- No `set -e` - see the comment at the top of the script for why
 - One command per `case` branch, keep it flat and readable
-- New commands must have an entry in the `help` case, the man page, and the README table
+- New commands belong in the appropriate `lib/` module and must have a dispatch entry in `main()`, an entry in `lib/help.sh`, the man page, and the README table
 
 ## Code of Conduct
 

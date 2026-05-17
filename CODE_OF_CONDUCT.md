@@ -20,7 +20,7 @@ That spirit carries into how this project is run.
 
 - Be patient with people who are learning.
 - If someone's PR is not quite right, explain what is missing rather than just closing it.
-- If you disagree, say what you think and why — then let the discussion happen.
+- If you disagree, say what you think and why - then let the discussion happen.
 - Assume good faith until proven otherwise.
 
 ## What will not be tolerated

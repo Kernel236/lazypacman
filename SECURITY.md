@@ -20,7 +20,7 @@ Temp files are created with `mktemp`, which generates a random name atomically. 
 
 ## What is out of scope
 
-- Vulnerabilities in `yay`, `paru`, `pacman`, or `pacdiff` — report those upstream.
+- Vulnerabilities in `yay`, `paru`, `pacman`, or `pacdiff` - report those upstream.
 - Attacks that require write access to the user's home directory. The machine is already compromised at that point.
 - Theoretical attacks with no realistic exploitation path.
 
