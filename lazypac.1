@@ -1,4 +1,4 @@
-.TH LAZYPAC 1 "2026-05-16" "1.0.0" "Lazy Pacman"
+.TH LAZYPAC 1 "2026-05-17" "1.2.0" "Lazy Pacman"
 
 .SH NAME
 lazypac \- simple human-readable wrapper for pacman/yay/paru
@@ -17,7 +17,7 @@ or
 .BR paru (1)
 (whichever is installed) that maps short, readable subcommands to their
 underlying pacman flags.
-No databases, no tracking, no hidden logic \(em every command prints exactly
+No databases, no tracking, no hidden logic - every command prints exactly
 what it runs underneath.
 .PP
 At startup,
@@ -26,7 +26,7 @@ detects the AUR helper in order: first
 .BR yay ,
 then
 .BR paru .
-If neither is found it exits with install instructions.
+If neither is found it exits with an error message.
 .PP
 Upgrade logs are stored in
 .I $XDG_DATA_HOME/lazypac
@@ -44,14 +44,14 @@ Runs:
 .B $AUR_HELPER -S
 .I pkg ...
 .IP
-.I Example \(em install a single package:
+.I Example - install a single package:
 .RS
 .nf
 lazypac install firefox
 .fi
 .RE
 .IP
-.I Example \(em install several packages at once without confirmation prompts:
+.I Example - install several packages at once without confirmation prompts:
 .RS
 .nf
 lazypac install firefox chromium vlc --noconfirm
@@ -71,14 +71,14 @@ Runs:
 .B $AUR_HELPER -Rs
 .I pkg ...
 .IP
-.I Example \(em remove a package you no longer use:
+.I Example - remove a package you no longer use:
 .RS
 .nf
 lazypac remove gimp
 .fi
 .RE
 .IP
-.I Example \(em remove a group of related packages in one command:
+.I Example - remove a group of related packages in one command:
 .RS
 .nf
 lazypac remove gimp inkscape krita
@@ -95,14 +95,14 @@ Runs:
 .B $AUR_HELPER -Rns
 .I pkg ...
 .IP
-.I Example \(em cleanly uninstall a package and wipe its config:
+.I Example - cleanly uninstall a package and wipe its config:
 .RS
 .nf
 lazypac purge openssh
 .fi
 .RE
 .IP
-.I Example \(em purge several packages non-interactively:
+.I Example - purge several packages non-interactively:
 .RS
 .nf
 lazypac purge openssh cups --noconfirm
@@ -112,16 +112,21 @@ lazypac purge openssh cups --noconfirm
 .TP
 .B update
 Sync the package databases without upgrading anything.
-Useful before running
-.B search
-or
-.B info
-to make sure the metadata is current, or when you want to check for
-available upgrades without applying them yet.
+.PP
+.B Warning:
+running
+.B \-Sy
+without a subsequent upgrade leaves the system in a partial upgrade state,
+which is unsafe on Arch Linux.
+Prefer
+.B lazypac upgrade
+for routine use.
+.B update
+is provided for cases where you explicitly need a database refresh only.
 Runs:
 .B $AUR_HELPER -Sy
 .IP
-.I Example \(em refresh package databases:
+.I Example - refresh package databases:
 .RS
 .nf
 lazypac update
@@ -134,14 +139,14 @@ Sync databases and upgrade all installed packages, including AUR packages.
 Runs:
 .B $AUR_HELPER -Syu
 .IP
-.I Example \(em standard full system upgrade:
+.I Example - standard full system upgrade:
 .RS
 .nf
 lazypac upgrade
 .fi
 .RE
 .IP
-.I Example \(em also rebuild AUR packages that have updated VCS sources (git, svn, ...):
+.I Example - also rebuild AUR packages that have updated VCS sources (git, svn, ...):
 .RS
 .nf
 lazypac upgrade --devel
@@ -183,14 +188,14 @@ Runs:
 .B $AUR_HELPER -Syu
 followed by snapshot, diff, and pacnew check.
 .IP
-.I Example \(em upgrade with a full version diff saved for review later:
+.I Example - upgrade with a full version diff saved for review later:
 .RS
 .nf
 lazypac safe-upgrade
 .fi
 .RE
 .IP
-.I Example \(em safe upgrade, including VCS rebuilds, without confirmation prompts:
+.I Example - safe upgrade, including VCS rebuilds, without confirmation prompts:
 .RS
 .nf
 lazypac safe-upgrade --devel --noconfirm
@@ -208,14 +213,14 @@ Runs:
 .B $AUR_HELPER -Ss
 .I pkg
 .IP
-.I Example \(em find packages related to a PDF viewer:
+.I Example - find packages related to a PDF viewer:
 .RS
 .nf
 lazypac search pdf viewer
 .fi
 .RE
 .IP
-.I Example \(em search the AUR and sort results by vote count:
+.I Example - search the AUR and sort results by vote count:
 .RS
 .nf
 lazypac search spotify --sortby votes
@@ -231,7 +236,7 @@ Runs:
 .B $AUR_HELPER -Si
 .I pkg
 .IP
-.I Example \(em inspect a package before deciding to install it:
+.I Example - inspect a package before deciding to install it:
 .RS
 .nf
 lazypac info neovim
@@ -245,14 +250,14 @@ Useful for piping into other tools.
 Runs:
 .B $AUR_HELPER -Qq
 .IP
-.I Example \(em count how many packages are installed:
+.I Example - count how many packages are installed:
 .RS
 .nf
 lazypac list | wc -l
 .fi
 .RE
 .IP
-.I Example \(em check whether a specific package name appears in the list:
+.I Example - check whether a specific package name appears in the list:
 .RS
 .nf
 lazypac list | grep python
@@ -265,14 +270,14 @@ Print the names and versions of all installed packages.
 Runs:
 .B $AUR_HELPER -Q
 .IP
-.I Example \(em see what is installed and pipe it to a file for backup:
+.I Example - see what is installed and pipe it to a file for backup:
 .RS
 .nf
 lazypac installed > ~/pkg-backup.txt
 .fi
 .RE
 .IP
-.I Example \(em find all installed packages whose name contains "lib":
+.I Example - find all installed packages whose name contains "lib":
 .RS
 .nf
 lazypac installed | grep lib
@@ -291,14 +296,14 @@ Runs:
 .I pkg
 for each argument.
 .IP
-.I Example \(em verify a single package before a script relies on it:
+.I Example - verify a single package before a script relies on it:
 .RS
 .nf
 lazypac check git
 .fi
 .RE
 .IP
-.I Example \(em check several tools at once after a fresh install:
+.I Example - check several tools at once after a fresh install:
 .RS
 .nf
 lazypac check git curl wget rsync
@@ -312,19 +317,19 @@ all dependencies into a visual tree.
 Requires
 .BR pactree (8),
 which ships with
-.BR pacman .
+.BR pacman-contrib .
 Runs:
 .B pactree
 .I pkg
 .IP
-.I Example \(em understand what a package pulls in before installing it:
+.I Example - understand what a package pulls in before installing it:
 .RS
 .nf
 lazypac deps mesa
 .fi
 .RE
 .IP
-.I Example \(em show the reverse dependency tree (what depends on this package):
+.I Example - show the reverse dependency tree (what depends on this package):
 .RS
 .nf
 lazypac deps -r python
@@ -338,14 +343,14 @@ required by any other installed package.
 Runs:
 .B $AUR_HELPER -Qdt
 .IP
-.I Example \(em check for orphans after removing a large application:
+.I Example - check for orphans after removing a large application:
 .RS
 .nf
 lazypac orphans
 .fi
 .RE
 .IP
-.I Example \(em pipe the orphan list into a file to review before removing:
+.I Example - pipe the orphan list into a file to review before removing:
 .RS
 .nf
 lazypac orphans > ~/orphans.txt
@@ -373,7 +378,7 @@ If none are found, prints a confirmation message.
 Runs:
 .B find /etc \(rs( -name *.pacnew -o -name *.pacsave \(rs)
 .IP
-.I Example \(em check for leftover config files after an upgrade:
+.I Example - check for leftover config files after an upgrade:
 .RS
 .nf
 lazypac pacnew
@@ -394,7 +399,7 @@ If no logs exist yet, prints a hint to run
 Runs:
 .B ls -lh $LOG_DIR
 .IP
-.I Example \(em see how many upgrades have been logged and how large each file is:
+.I Example - see how many upgrades have been logged and how large each file is:
 .RS
 .nf
 lazypac log
@@ -420,7 +425,7 @@ prints an error and suggests listing available logs.
 Runs:
 .B less $LOG_DIR/file
 .IP
-.I Example \(em read the log from a specific upgrade:
+.I Example - read the log from a specific upgrade:
 .RS
 .nf
 lazypac log upgrade_20260516_120000.log
@@ -433,7 +438,7 @@ Delete all
 .I *.log
 files from the log directory and print how many were removed.
 .IP
-.I Example \(em free up space and start a fresh log history:
+.I Example - free up space and start a fresh log history:
 .RS
 .nf
 lazypac logclean
@@ -452,7 +457,7 @@ of passing an empty argument list to the AUR helper.
 Runs:
 .B $AUR_HELPER -Rns $($AUR_HELPER -Qdtq)
 .IP
-.I Example \(em clean up after removing a large application that pulled in many deps:
+.I Example - clean up after removing a large application that pulled in many deps:
 .RS
 .nf
 lazypac remove-orphans
@@ -460,31 +465,75 @@ lazypac remove-orphans
 .RE
 
 .TP
-.B clean
-Remove cached package files for packages that are no longer the latest
-installed version, freeing up disk space while keeping the current version
-cached (useful for quick downgrades).
+.B cache-size
+Print the total size and file count of the package cache at
+.IR /var/cache/pacman/pkg/ .
 Runs:
-.B $AUR_HELPER -Sc
+.B du -sh /var/cache/pacman/pkg/
 .IP
-.I Example \(em reclaim disk space after a large upgrade:
+.I Example - check how much disk the cache is using before cleaning:
 .RS
 .nf
-lazypac clean
+lazypac cache-size
+# Cache location : /var/cache/pacman/pkg/
+# Total size     : 4.2G
+# Cached files   : 1337
 .fi
 .RE
 
 .TP
-.B clean-all
-Remove the entire package cache, including the currently installed versions.
-Use with care \(em after this you cannot downgrade without re-downloading.
+.B cache-clean
+Remove cached package files for versions that are no longer current,
+keeping the latest installed version cached (useful for quick downgrades).
 Runs:
-.B $AUR_HELPER -Scc
+.B sudo pacman -Sc
 .IP
-.I Example \(em wipe the cache completely on a low-disk-space system:
+.I Example - reclaim disk space after a large upgrade:
 .RS
 .nf
-lazypac clean-all
+lazypac cache-clean
+.fi
+.RE
+
+.TP
+.B cache-clean-old
+Remove all cached package files for packages that are no longer installed
+on the system.
+Requires
+.BR paccache (8)
+from
+.BR pacman-contrib .
+Runs:
+.B sudo paccache -ruk0
+.PP
+For finer control (e.g. keep the last 2 versions of every installed package)
+use
+.B paccache
+directly:
+.RS
+.nf
+paccache -rk 2
+.fi
+.RE
+.IP
+.I Example - free space taken by packages you already removed:
+.RS
+.nf
+lazypac cache-clean-old
+.fi
+.RE
+
+.TP
+.B cache-clean-all
+Remove the entire package cache, including the currently installed versions.
+Use with care - after this you cannot downgrade without re-downloading.
+Runs:
+.B sudo pacman -Scc
+.IP
+.I Example - wipe the cache completely on a low-disk-space system:
+.RS
+.nf
+lazypac cache-clean-all
 .fi
 .RE
 
@@ -509,7 +558,7 @@ Print the installed version of
 .RS
 .nf
 lazypac version
-# lazypac 1.0.0
+# lazypac 1.2.0
 .fi
 .RE
 
@@ -593,6 +642,7 @@ underlying tool returned an error.
 .BR paru (1),
 .BR pacman (8),
 .BR pactree (8),
+.BR paccache (8),
 .BR pacdiff (8),
 .BR mktemp (1),
 .BR less (1)
