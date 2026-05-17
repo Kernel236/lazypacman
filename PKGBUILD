@@ -8,13 +8,15 @@ url="https://github.com/Kernel236/lazypacman"
 license=('MIT')
 depends=('bash' 'pacman-contrib')
 optdepends=('yay: AUR helper (recommended)'
-            'paru: AUR helper')
+            'paru: AUR helper'
+            'dialog: required for lazypac-tui interactive frontend')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
 sha256sums=('988643d2eb05c495256f6b7addc777ff13b3a559dbb0feddb7be27b99fedf964')
 
 package() {
     cd "$srcdir/lazypacman-$pkgver"
     install -Dm755 lazypac "$pkgdir/usr/bin/lazypac"
+    install -Dm755 lazypac-tui "$pkgdir/usr/bin/lazypac-tui"
     install -Dm644 lib/help.sh     "$pkgdir/usr/lib/lazypac/help.sh"
     install -Dm644 lib/config.sh   "$pkgdir/usr/lib/lazypac/config.sh"
     install -Dm644 lib/packages.sh "$pkgdir/usr/lib/lazypac/packages.sh"

@@ -33,6 +33,18 @@ Automatically detects your package manager at startup: `yay` first, then `paru`,
 
 ---
 
+## TUI (optional)
+
+For those who don't even want to remember lazypac commands: `lazypac-tui` groups all of them into explorable submenus. Zero mnemonic effort required.
+
+<p align="center">
+  <img src="assets/demo_tui.gif" alt="lazypac-tui demo">
+</p>
+
+Requires `dialog` (`lazypac install dialog`), then just run `lazypac-tui`.
+
+---
+
 ## Install
 
 ### Option 1 - AUR
