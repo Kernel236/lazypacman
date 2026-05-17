@@ -299,6 +299,7 @@ main_menu() {
             local confirm
             read -r confirm
             [[ "${confirm,,}" == "y" ]] && break
+            printf "\033[1A\033[J"
             continue
         fi
 
