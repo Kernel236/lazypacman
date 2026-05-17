@@ -29,6 +29,10 @@ case "${1:-}" in
     -Si)   echo "yay -Si ${*:2}" ;;
     -Sc)   echo "yay -Sc" ;;
     -Scc)  echo "yay -Scc" ;;
+    -Qu)
+        if [[ -n "${FAKE_UPDATES:-}" ]]; then
+            printf "%s\n" "$FAKE_UPDATES"
+        fi ;;
 esac
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/yay"
@@ -71,4 +75,13 @@ EOF
 cat "$1"
 EOF
     chmod +x "$BATS_TEST_TMPDIR/bin/less"
+
+    # Fake checkupdates (pacman-contrib) — returns FAKE_UPDATES content
+    cat > "$BATS_TEST_TMPDIR/bin/checkupdates" << 'EOF'
+#!/usr/bin/env bash
+if [[ -n "${FAKE_UPDATES:-}" ]]; then
+    printf "%s\n" "$FAKE_UPDATES"
+fi
+EOF
+    chmod +x "$BATS_TEST_TMPDIR/bin/checkupdates"
 }
