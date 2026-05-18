@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034  # labels/values arrays are passed by name to _pick via nameref
 set -euo pipefail
 
 VERSION="1.4.0"
@@ -37,6 +38,7 @@ show_banner() {
     elif [[ -f "/usr/lib/lazypac/tui_banner.sh" ]]; then
         banner="/usr/lib/lazypac/tui_banner.sh"
     fi
+    # shellcheck source=/dev/null
     [[ -n "$banner" ]] && source "$banner"
 
     echo ""
