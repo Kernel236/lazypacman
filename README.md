@@ -33,7 +33,7 @@ Automatically detects your package manager at startup: `yay` first, then `paru`,
 
 ---
 
-## TUI (optional)
+## TUI 
 
 For those who don't even want to remember lazypac commands: `lazypac-tui` groups all of them into explorable submenus. Zero mnemonic effort required.
 
