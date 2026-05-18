@@ -330,7 +330,7 @@ main_menu() {
     local choice
 
     while true; do
-        if ! _pick "lazypac-tui  v$VERSION" labels values choice; then
+        if ! _pick "Main menu  [lazypac-tui v$VERSION]" labels values choice; then
             printf "  \033[1;33mexit lazypac-tui?\033[0m \033[2m[y/N]\033[0m "
             local confirm
             read -r confirm
