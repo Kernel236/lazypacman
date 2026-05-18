@@ -11,7 +11,7 @@ optdepends=('yay: AUR helper (recommended)'
             'paru: AUR helper'
             'figlet: ASCII art goodbye screen in lazypac-tui')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('d0e3796b598a3b2d032332e3e98f1b10a59022b4026033e78b17f0de9f4f2e3e')
 
 package() {
     cd "$srcdir/lazypacman-$pkgver"
