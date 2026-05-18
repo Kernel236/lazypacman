@@ -95,3 +95,24 @@ cmd_unignore() {
         _lazypac_rm_ignorepkg "$pkg" || exit 1
     done
 }
+
+cmd_ignored() {
+    local conf="${_PACMAN_CONF:-/etc/pacman.conf}"
+    local line
+    line=$(grep -m1 "^IgnorePkg" "$conf" 2>/dev/null) || true
+    if [[ -z "$line" ]]; then
+        echo "No packages are currently ignored."
+        return 0
+    fi
+    local pkgs
+    pkgs=$(echo "$line" | sed 's/^IgnorePkg *= *//' | sed 's/ *$//')
+    if [[ -z "$pkgs" ]]; then
+        echo "No packages are currently ignored."
+        return 0
+    fi
+    echo "Ignored packages (IgnorePkg in $conf):"
+    local pkg
+    for pkg in $pkgs; do
+        echo "  - $pkg"
+    done
+}
