@@ -170,7 +170,7 @@ get_package() {
 }
 
 run_cmd() {
-    printf "\n  \033[90mrunning:\033[0m lazypac %s\n  " "$*"
+    printf "\n  \033[1;33mrunning:\033[0m lazypac %s\n  " "$*"
     printf '─%.0s' {1..50}
     printf "\n\n"
     lazypac "$@" || true
