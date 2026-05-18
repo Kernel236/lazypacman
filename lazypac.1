@@ -1,4 +1,4 @@
-.TH LAZYPAC 1 "2026-05-17" "1.3.0" "Lazy Pacman"
+.TH LAZYPAC 1 "2026-05-18" "1.4.0" "Lazy Pacman"
 
 .SH NAME
 lazypac \- simple human-readable wrapper for pacman/yay/paru
@@ -309,6 +309,24 @@ lazypac unignore hyprland
 .RS
 .nf
 lazypac unignore hyprland waybar
+.fi
+.RE
+
+.TP
+.B ignored
+Print all packages currently listed in
+.B IgnorePkg
+in
+.IR /etc/pacman.conf .
+If no packages are pinned, prints a confirmation message.
+.IP
+.I Example - see which packages are currently pinned:
+.RS
+.nf
+lazypac ignored
+# Ignored packages (IgnorePkg in /etc/pacman.conf):
+#   - hyprland
+#   - waybar
 .fi
 .RE
 
@@ -705,9 +723,47 @@ Print the installed version of
 .RS
 .nf
 lazypac version
-# lazypac 1.3.0
+# lazypac 1.4.0
 .fi
 .RE
+
+.SH LAZYPAC-TUI
+.B lazypac-tui
+is an optional interactive terminal frontend for
+.BR lazypac .
+It provides arrow-key navigable menus (vim-style
+.B j/k
+also supported) organised into the same categories as the command reference:
+Packages, Upgrade ctrl, Query, Maintenance, Logs, and Help.
+.PP
+All lazypac commands are reachable from the TUI without memorising any subcommand.
+Commands that require a package name prompt for input after selection; pressing
+ENTER on an empty prompt cancels and returns to the menu.
+.PP
+Launch with:
+.RS
+.nf
+lazypac-tui
+.fi
+.RE
+.PP
+Navigate menus with
+.BR ↑ / ↓
+or
+.BR j / k .
+Press
+.B ENTER
+to select and
+.B q
+to go back or exit (a confirmation prompt is shown when quitting from the main menu).
+.PP
+.B lazypac-tui
+requires
+.B lazypac
+to be installed and in PATH.
+It is installed alongside
+.B lazypac
+when using the AUR package.
 
 .SH FLAG PASSTHROUGH
 Every argument that appears after the

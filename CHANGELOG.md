@@ -10,6 +10,18 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.0] - 2026-05-18
+
+### Added
+- `lazypac-tui`: interactive terminal frontend with arrow-key navigable menus (vim-style `j/k` also supported). Groups all lazypac commands into six submenus: Packages, Upgrade ctrl, Query, Maintenance, Logs, Help. No external dependencies beyond `lazypac` itself.
+- `ignored`: print all packages currently listed in `IgnorePkg` in `/etc/pacman.conf`.
+
+### Changed
+- `lazypac-tui` installed to `/usr/bin/lazypac-tui` alongside `lazypac`; banner asset installed to `/usr/lib/lazypac/tui_banner.sh`.
+- `dialog` removed from optdepends; the TUI is now implemented in pure bash with no external UI library.
+
+---
+
 ## [1.3.0] - 2026-05-17
 
 ### Added

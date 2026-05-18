@@ -41,7 +41,7 @@ For those who don't even want to remember lazypac commands: `lazypac-tui` groups
   <img src="assets/demo_tui.gif" alt="lazypac-tui demo">
 </p>
 
-Requires `dialog` (`lazypac install dialog`), then just run `lazypac-tui`.
+No extra dependencies — just run `lazypac-tui`.
 
 ---
 
@@ -58,10 +58,11 @@ paru -S lazypac
 ### Option 2 - Manual
 
 ```bash
-sudo cp lazypac /usr/local/bin/
-sudo chmod +x /usr/local/bin/lazypac
+sudo cp lazypac lazypac-tui /usr/local/bin/
+sudo chmod +x /usr/local/bin/lazypac /usr/local/bin/lazypac-tui
 sudo mkdir -p /usr/lib/lazypac
 sudo cp lib/*.sh /usr/lib/lazypac/
+sudo cp assets/lazypacman_tui_banner.sh /usr/lib/lazypac/tui_banner.sh
 ```
 
 ### Dependencies
@@ -93,6 +94,7 @@ sudo cp lib/*.sh /usr/lib/lazypac/
 |---|---|---|
 | `ignore <pkg...>` | Pin package(s) - skip on upgrades | `/etc/pacman.conf` IgnorePkg |
 | `unignore <pkg...>` | Unpin package(s) - allow upgrades again | `/etc/pacman.conf` IgnorePkg |
+| `ignored` | List currently pinned packages | `/etc/pacman.conf` IgnorePkg |
 
 > `downgrade` prompts whether to add the package to IgnorePkg after a successful install.
 
@@ -256,11 +258,12 @@ AUR helper: yay
 
 ```
 lazypac              # main entry point - detects pkg manager, sources modules, dispatches commands
+lazypac-tui          # optional interactive TUI frontend (arrow-key menus, no extra deps)
 lib/
   help.sh            # cmd_help()
   packages.sh        # install, remove, purge, update, upgrade, downgrade, remove-orphans
   cache.sh           # cache-clean, cache-clean-all, cache-clean-old, cache-size
   query.sh           # search, info, list, installed, check, deps, orphans, check-updates
   logs.sh            # safe-upgrade, log, logclean, pacnew
-  config.sh          # ignore, unignore + IgnorePkg helpers
+  config.sh          # ignore, unignore, ignored + IgnorePkg helpers
 ```

@@ -1,6 +1,6 @@
 # Maintainer: Kernel236 <riccardo.delsignore01@gmail.com>
 pkgname=lazypac
-pkgver=1.3.0
+pkgver=1.4.0
 pkgrel=1
 pkgdesc="Simple lazy human-readable wrapper for pacman/yay/paru"
 arch=('any')
@@ -9,9 +9,9 @@ license=('MIT')
 depends=('bash' 'pacman-contrib')
 optdepends=('yay: AUR helper (recommended)'
             'paru: AUR helper'
-            'dialog: required for lazypac-tui interactive frontend')
+            'figlet: ASCII art goodbye screen in lazypac-tui')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('988643d2eb05c495256f6b7addc777ff13b3a559dbb0feddb7be27b99fedf964')
+sha256sums=('SKIP')
 
 package() {
     cd "$srcdir/lazypacman-$pkgver"
